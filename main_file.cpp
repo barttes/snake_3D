@@ -116,36 +116,36 @@ void drawScene(GLFWwindow* window, float user_distance) {
     glLoadMatrixf(value_ptr(P)); //Załaduj macierz rzutowania
     glMatrixMode(GL_MODELVIEW);  //Włącz tryb modyfikacji macierzy model-widok
 
-    //macierz modelu
-	mat4 M1=mat4(1.0f);
-    mat4 M2=mat4(1.0f);
-    mat4 M3=mat4(1.0f);
-    mat4 M4=mat4(1.0f);
-
-	//transformacja
-	M1=translate(M1,glm::vec3(0.1f,0.1f,0.0f));
-	M2=translate(M2,glm::vec3(-1.1f,0.1f,0.0f));
-    M3=translate(M3,glm::vec3(0.1f,-1.1f,0.0f));
-	M4=translate(M4,glm::vec3(-1.1f,-1.1f,0.0f));
-
     glEnableClientState(GL_VERTEX_ARRAY); //Podczas rysowania używaj tablicy wierzchołków
     glEnableClientState(GL_COLOR_ARRAY); //Podczas rysowania używaj tablicy kolorów
 
     glVertexPointer(3,GL_FLOAT,0,mySquareVertices); //Ustaw tablicę mySquareVertices jako tablicę wierzchołków
     glColorPointer(3,GL_FLOAT,0,mySquareColors); //Ustaw tablicę mySquareColors jako tablicę kolorów
 
-    //rysuj model
-    glLoadMatrixf(value_ptr(V*M1));
-    glDrawArrays(GL_QUADS,0,4);
+    //macierz modelu
+	mat4 M=mat4(1.0f);
+    mat4 M_to_translate = M;
 
-    glLoadMatrixf(value_ptr(V*M2));
-    glDrawArrays(GL_QUADS,0,4);
+	//translacja i rysowanie
+    M_to_translate = translate(M_to_translate,glm::vec3(1.2f,1.2f,0.0f));
+    glLoadMatrixf(value_ptr(V*M_to_translate));
+    M_to_translate = M;
+    glDrawArrays(GL_TRIANGLES,0,mySquareVertexCount);
 
-    glLoadMatrixf(value_ptr(V*M3));
-    glDrawArrays(GL_QUADS,0,4);
+    M_to_translate = translate(M_to_translate,glm::vec3(-1.2f,1.2f,0.0f));
+    glLoadMatrixf(value_ptr(V*M_to_translate));
+    M_to_translate = M;
+    glDrawArrays(GL_TRIANGLES,0,mySquareVertexCount);
 
-    glLoadMatrixf(value_ptr(V*M4));
-    glDrawArrays(GL_QUADS,0,4);
+    M_to_translate = translate(M_to_translate,glm::vec3(-1.2f,-1.2f,0.0f));
+    glLoadMatrixf(value_ptr(V*M_to_translate));
+    M_to_translate = M;
+    glDrawArrays(GL_TRIANGLES,0,mySquareVertexCount);
+
+    M_to_translate = translate(M_to_translate,glm::vec3(1.2f,-1.2f,0.0f));
+    glLoadMatrixf(value_ptr(V*M_to_translate));
+    M_to_translate = M;
+    glDrawArrays(GL_TRIANGLES,0,mySquareVertexCount);
 
     //Posprzątaj po sobie
     glDisableClientState(GL_VERTEX_ARRAY);
