@@ -51,7 +51,7 @@ void error_callback(int error, const char* description) {
 
 //Procedura obsługi przycisku scrollowania myszy
 void scroll_callback(GLFWwindow* window, double x, double y){
-    user_distance += y;
+    if ( user_distance+y > -10 && user_distance+y < -2) user_distance += y;
 }
 
 //Procedura obsługi przycisku  myszy
@@ -71,22 +71,17 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 //Procedura obsługi przewijania obrazu za pomocą kursora
 void cursor_callback(GLFWwindow* window, double x, double y){
     if (is_mouse_left_buton_pressed == true) {
-            if (x<old_coordinate_x) {
-                position_x-=x/5000;
-            } else {
-                position_x+=x/5000;
-            }
-            if (y<old_coordinate_y) {
-                position_y-=y/5000;
-            } else {
-                position_y+=y/5000;
-            }
+        if (x<old_coordinate_x) {
+            position_x-=x/5000;
+        } else {
+            position_x+=x/5000;
+        }
+        if (y<old_coordinate_y) {
+            position_y-=y/5000;
+        } else {
+            position_y+=y/5000;
+        }
 
-        cout <<"X"<< x << "\n";
-        cout << "position X: " << position_x << "\n";
-        cout <<"Y"<< y << "\n";
-        cout << "position Y: " << position_y << "\n";
-        cout << "\n";
         old_coordinate_x = x;
         old_coordinate_y = y;
     }
