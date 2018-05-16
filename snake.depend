@@ -553,7 +553,7 @@
 
 1526374430 c:\users\dell\documents\studia\informatyka_4sem\grafika\snake\mysquare.h
 
-1526413175 source:c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d\main_file.cpp
+1526458171 source:c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d\main_file.cpp
 	<GL/glew.h>
 	<GLFW/glfw3.h>
 	<glm/glm.hpp>
@@ -564,6 +564,7 @@
 	"constants.h"
 	"mySquare.h"
 	<iostream>
+	<cmath>
 
 1469357978 c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d\glew\include\gl\glew.h
 	<stddef.h>
@@ -1098,5 +1099,5 @@
 
 1487675316 c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d\constants.h
 
-1526413502 c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d\mysquare.h
+1526454729 c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d\mysquare.h
 

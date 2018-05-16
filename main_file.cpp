@@ -30,6 +30,7 @@ Place, Fifth Floor, Boston, MA  02110 - 1301  USA
 #include "constants.h"
 #include "mySquare.h"
 #include <iostream>
+#include <cmath>
 
 using namespace glm;
 using namespace std;
@@ -49,9 +50,11 @@ void error_callback(int error, const char* description) {
 	fputs(description, stderr);
 }
 
+//*****************************Obsługa eventów*******************************
+
 //Procedura obsługi przycisku scrollowania myszy
 void scroll_callback(GLFWwindow* window, double x, double y){
-    if ( user_distance+y > -10 && user_distance+y < -2) user_distance += y;
+    if ( user_distance+y > -40 && user_distance+y < -2) user_distance += y;
 }
 
 //Procedura obsługi przycisku  myszy
@@ -88,6 +91,8 @@ void cursor_callback(GLFWwindow* window, double x, double y){
 
 }
 
+
+
 //Procedura inicjująca
 void initOpenGLProgram(GLFWwindow* window) {
 	//************Tutaj umieszczaj kod, który należy wykonać raz, na początku programu************
@@ -99,8 +104,46 @@ void initOpenGLProgram(GLFWwindow* window) {
 
 }
 
+//*****************************Procedury rysowania modeli*******************************
+
+void drawBoard(GLFWwindow* window, int board_size, mat4 V) {
+
+    int tile_number = 0;
+
+    glVertexPointer(3,GL_FLOAT,0,mySquareVertices); //Ustaw tablicę mySquareVertices jako tablicę wierzchołków
+
+    //macierz modelu płytki
+	mat4 tile_M=mat4(1.0f);
+	tile_M=translate(tile_M, vec3(-1.0f,-1.0f,0.0f));
+    mat4 tile_M_to_translate = tile_M;
+
+    for (int i=(board_size/2); i>-(board_size/2-1); i--) {
+        for (int j=(board_size/2); j>-(board_size/2-1); j--) {
+
+            //TODO: poprawa wyboru koloru
+            //Wybór i ustawienie tablicy mySquareColors jako tablicy kolorów,
+            /*if ((tile_number+i)%2==0){
+                glColorPointer(3,GL_FLOAT,0,mySquareDarkerColors);
+            } else {
+                glColorPointer(3,GL_FLOAT,0,mySquareLighterColors);
+            }*/
+
+            glColorPointer(3,GL_FLOAT,0,mySquareLighterColors);
+
+            //rysowanie kafelków
+            tile_M_to_translate = translate(tile_M_to_translate,glm::vec3((float)i,(float)j,0.0f));
+            glLoadMatrixf(value_ptr(V*tile_M_to_translate));  // wyliczenie macierzy
+            glDrawArrays(GL_TRIANGLES,0,mySquareVertexCount); //rysowanie
+            tile_M_to_translate = tile_M;  //przywrócenie domyślnej macierzy modelu
+
+            tile_number++;
+        }
+    }
+
+}
+
 //Procedura rysująca zawartość sceny
-void drawScene(GLFWwindow* window, float user_distance) {
+void drawScene(GLFWwindow* window) {
 	//************Tutaj umieszczaj kod rysujący obraz******************
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT); //Wyczyść bufor kolorów (czyli przygotuj "płótno" do rysowania)
 
@@ -119,33 +162,7 @@ void drawScene(GLFWwindow* window, float user_distance) {
     glEnableClientState(GL_VERTEX_ARRAY); //Podczas rysowania używaj tablicy wierzchołków
     glEnableClientState(GL_COLOR_ARRAY); //Podczas rysowania używaj tablicy kolorów
 
-    glVertexPointer(3,GL_FLOAT,0,mySquareVertices); //Ustaw tablicę mySquareVertices jako tablicę wierzchołków
-    glColorPointer(3,GL_FLOAT,0,mySquareColors); //Ustaw tablicę mySquareColors jako tablicę kolorów
-
-    //macierz modelu
-	mat4 M=mat4(1.0f);
-    mat4 M_to_translate = M;
-
-	//translacja i rysowanie
-    M_to_translate = translate(M_to_translate,glm::vec3(1.2f,1.2f,0.0f));
-    glLoadMatrixf(value_ptr(V*M_to_translate));
-    M_to_translate = M;
-    glDrawArrays(GL_TRIANGLES,0,mySquareVertexCount);
-
-    M_to_translate = translate(M_to_translate,glm::vec3(-1.2f,1.2f,0.0f));
-    glLoadMatrixf(value_ptr(V*M_to_translate));
-    M_to_translate = M;
-    glDrawArrays(GL_TRIANGLES,0,mySquareVertexCount);
-
-    M_to_translate = translate(M_to_translate,glm::vec3(-1.2f,-1.2f,0.0f));
-    glLoadMatrixf(value_ptr(V*M_to_translate));
-    M_to_translate = M;
-    glDrawArrays(GL_TRIANGLES,0,mySquareVertexCount);
-
-    M_to_translate = translate(M_to_translate,glm::vec3(1.2f,-1.2f,0.0f));
-    glLoadMatrixf(value_ptr(V*M_to_translate));
-    M_to_translate = M;
-    glDrawArrays(GL_TRIANGLES,0,mySquareVertexCount);
+    drawBoard(window, 4, V);
 
     //Posprzątaj po sobie
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -188,7 +205,7 @@ int main(void)
 	//Główna pętla
 	while (!glfwWindowShouldClose(window)) //Tak długo jak okno nie powinno zostać zamknięte
 	{
-		drawScene(window, user_distance); //Wykonaj procedurę rysującą
+		drawScene(window); //Wykonaj procedurę rysującą
 		glfwPollEvents(); //Wykonaj procedury callback w zalezności od zdarzeń jakie zaszły.
 	}
 
