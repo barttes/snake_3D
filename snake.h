@@ -41,7 +41,7 @@ class Snake
          *\return Model to be drawn
          */
          model* GetModel(int n, int* r);
-         void move(int n);
+         void mov(int n);
 
     protected:
 

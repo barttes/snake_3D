@@ -49,7 +49,7 @@ float old_coordinate_y;
 
 //macierz postêpu
 Snake* Sn;
-mat4 move= mat4(1.0f);
+mat4 mov= mat4(1.0f);
 int move_angle = 0;
 float speed= 0.1;
 bool keyPress = false;
@@ -252,7 +252,7 @@ void drawScene(GLFWwindow* window) {
     }
 
     direction = vec3(sin(move_angle*PI/180)*speed,0,-cos(move_angle*PI/180)*speed);
-    move = translate(move, direction);
+    mov = translate(mov, direction);
     moves_counter +=1;
     V=rotate(V,(cam_angle)*PI/180,vec3(0,1,0));
 
@@ -264,8 +264,8 @@ void drawScene(GLFWwindow* window) {
     glEnableClientState(GL_COLOR_ARRAY); //Podczas rysowania u¿ywaj tablicy kolorów
 
 
-    drawBoard(window, V*move);
-    drawSnake(window,cam_angle, move, V, moves_counter);
+    drawBoard(window, V*mov);
+    drawSnake(window,cam_angle, mov, V, moves_counter);
     if (cam_angle==move_angle){
         Sn->move(10);
     }
