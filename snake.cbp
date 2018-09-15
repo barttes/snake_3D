@@ -45,8 +45,23 @@
 		</Linker>
 		<Unit filename="allmodels.h" />
 		<Unit filename="constants.h" />
+		<Unit filename="functions/split.cpp">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
+		<Unit filename="functions/split.h">
+			<Option target="&lt;{~None~}&gt;" />
+		</Unit>
 		<Unit filename="main_file.cpp" />
+		<Unit filename="model.cpp" />
+		<Unit filename="model.h" />
 		<Unit filename="mySquare.h" />
+		<Unit filename="simpleSnake.h">
+			<Option target="Debug" />
+		</Unit>
+		<Unit filename="snake.cpp" />
+		<Unit filename="snake.h" />
+		<Unit filename="stage_gen.cpp" />
+		<Unit filename="stage_gen.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

@@ -1,29 +1,11 @@
 #ifndef MYCUBE_H
 #define MYCUBE_H
+unsigned int n = 10;
+unsigned int mySquareVertexCount=12*n*n;
 
-unsigned int mySquareVertexCount=12;
+float* mySquareVertices= new float[36*n*n];
 
-float mySquareVertices[]={
-   0,0,0,   1, 1, 0,   -1,1,0,
-   -1,1,0, -1,-1,0,    0,0,0,
-   0,0,0,  -1,-1,0,    1,-1,0,
-   1,-1,0,  1, 1, 0,   0,0,0
-
-};
-
-float mySquareDarkerColors[]={
-    0.1,0.1,0.1,       0.1,0.1,0.1,         0.1,0.1,0.1,
-    0.1,0.1,0.1,       0.1,0.1,0.1,         0.1,0.1,0.1,
-    0.1,0.1,0.1,       0.1,0.1,0.1,         0.1,0.1,0.1,
-    0.1,0.1,0.1,       0.1,0.1,0.1,         0.1,0.1,0.1
-};
-
-float mySquareLighterColors[]={
-    0.2,0.2,0.2,       0.2,0.2,0.2,         0.2,0.2,0.2,
-    0.2,0.2,0.2,       0.2,0.2,0.2,         0.2,0.2,0.2,
-    0.2,0.2,0.2,       0.2,0.2,0.2,         0.2,0.2,0.2,
-    0.2,0.2,0.2,       0.2,0.2,0.2,         0.2,0.2,0.2
-};
+float* mySquareColors=new float[36*n*n];
 
 #endif
 

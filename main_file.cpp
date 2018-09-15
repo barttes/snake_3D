@@ -1,19 +1,19 @@
 /*
-Niniejszy program jest wolnym oprogramowaniem; moÅ¼esz go
-rozprowadzaÄ‡ dalej i / lub modyfikowaÄ‡ na warunkach Powszechnej
-Licencji Publicznej GNU, wydanej przez FundacjÄ™ Wolnego
-Oprogramowania - wedÅ‚ug wersji 2 tej Licencji lub(wedÅ‚ug twojego
-wyboru) ktÃ³rejÅ› z pÃ³Åºniejszych wersji.
+Niniejszy program jest wolnym oprogramowaniem; mo¿esz go
+rozprowadzaæ dalej i / lub modyfikowaæ na warunkach Powszechnej
+Licencji Publicznej GNU, wydanej przez Fundacjê Wolnego
+Oprogramowania - wed³ug wersji 2 tej Licencji lub(wed³ug twojego
+wyboru) którejœ z póŸniejszych wersji.
 
-Niniejszy program rozpowszechniany jest z nadziejÄ…, iÅ¼ bÄ™dzie on
-uÅ¼yteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyÅ›lnej
-gwarancji PRZYDATNOÅšCI HANDLOWEJ albo PRZYDATNOÅšCI DO OKREÅšLONYCH
-ZASTOSOWAÅƒ.W celu uzyskania bliÅ¼szych informacji siÄ™gnij do
+Niniejszy program rozpowszechniany jest z nadziej¹, i¿ bêdzie on
+u¿yteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyœlnej
+gwarancji PRZYDATNOŒCI HANDLOWEJ albo PRZYDATNOŒCI DO OKREŒLONYCH
+ZASTOSOWAÑ.W celu uzyskania bli¿szych informacji siêgnij do
 Powszechnej Licencji Publicznej GNU.
 
-Z pewnoÅ›ciÄ… wraz z niniejszym programem otrzymaÅ‚eÅ› teÅ¼ egzemplarz
+Z pewnoœci¹ wraz z niniejszym programem otrzyma³eœ te¿ egzemplarz
 Powszechnej Licencji Publicznej GNU(GNU General Public License);
-jeÅ›li nie - napisz do Free Software Foundation, Inc., 59 Temple
+jeœli nie - napisz do Free Software Foundation, Inc., 59 Temple
 Place, Fifth Floor, Boston, MA  02110 - 1301  USA
 */
 
@@ -29,35 +29,51 @@ Place, Fifth Floor, Boston, MA  02110 - 1301  USA
 #include <stdio.h>
 #include "constants.h"
 #include "mySquare.h"
+#include "stage_gen.h"
+#include "snake.h"
 #include <iostream>
 #include <cmath>
 
 using namespace glm;
 using namespace std;
 
-//odlegÅ‚oÅ›Ä‡ uÅ¼ytkownika od Å›wiata
+//odleg³oœæ u¿ytkownika od œwiata
 float user_distance = -5.0f;
 
-//poÅ‚oÅ¼enie kamery
+//po³o¿enie kamery
 float position_x = 0.0f;
 float position_y = 0.0f;
 bool is_mouse_left_buton_pressed = false;
 float old_coordinate_x;
 float old_coordinate_y;
 
-//Procedura obsÅ‚ugi bÅ‚Ä™dÃ³w
+//macierz postêpu
+Snake* Sn;
+mat4 move= mat4(1.0f);
+int move_angle = 0;
+float speed= 0.1;
+bool keyPress = false;
+vec3 direction = vec3(sin(move_angle*PI/180)*speed,0,-cos(move_angle*PI/180)*speed);
+int cam_angle = 0;
+int add_cam_angle= 0;
+int moves_counter = 0;
+int turn_counter = 0;
+bool rigth_turn=false;
+bool left_turn=false;
+
+//Procedura obs³ugi b³êdów
 void error_callback(int error, const char* description) {
 	fputs(description, stderr);
 }
 
-//*****************************ObsÅ‚uga eventÃ³w*******************************
+//*****************************Obs³uga eventów*******************************
 
-//Procedura obsÅ‚ugi przycisku scrollowania myszy
+//Procedura obs³ugi przycisku scrollowania myszy
 void scroll_callback(GLFWwindow* window, double x, double y){
     if ( user_distance+y > -40 && user_distance+y < -2) user_distance += y;
 }
 
-//Procedura obsÅ‚ugi przycisku  myszy
+//Procedura obs³ugi przycisku  myszy
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
     if (action == GLFW_PRESS) {
         if (button == GLFW_MOUSE_BUTTON_1) {
@@ -71,7 +87,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     }
 }
 
-//Procedura obsÅ‚ugi przewijania obrazu za pomocÄ… kursora
+//Procedura obs³ugi przewijania obrazu za pomoc¹ kursora
 void cursor_callback(GLFWwindow* window, double x, double y){
     if (is_mouse_left_buton_pressed == true) {
         if (x<old_coordinate_x) {
@@ -91,125 +107,222 @@ void cursor_callback(GLFWwindow* window, double x, double y){
 
 }
 
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod){
+    if (action == GLFW_PRESS && !keyPress){
+        keyPress=true;
+        if (key==GLFW_KEY_LEFT) {
+                rigth_turn=false;
+                left_turn = true;
+        }
+        if (key==GLFW_KEY_RIGHT){
+                rigth_turn=true;
+                left_turn = false;
+        }
+    }
+    if (action == GLFW_RELEASE && keyPress){
+        if (key == GLFW_KEY_LEFT) keyPress = false;
+        if (key==GLFW_KEY_RIGHT) keyPress = false;
+    }
+}
 
 
-//Procedura inicjujÄ…ca
+//Procedura inicjuj¹ca
 void initOpenGLProgram(GLFWwindow* window) {
-	//************Tutaj umieszczaj kod, ktÃ³ry naleÅ¼y wykonaÄ‡ raz, na poczÄ…tku programu************
-	glfwSetScrollCallback(window, scroll_callback); //Zarejestruj procedurÄ™ obsÅ‚ugi scrollowania myszy
-    glfwSetMouseButtonCallback(window, mouse_button_callback); //Zarejestruj procedurÄ™ obsÅ‚ugi przyciskÃ³w myszy
-    glfwSetCursorPosCallback(window, cursor_callback); //Zarejestruj procedurÄ™ obsÅ‚ugi przyciskÃ³w myszy(window, mouse_button_callback); //Zarejestruj procedurÄ™ obsÅ‚ugi przyciskÃ³w myszy
+	//************Tutaj umieszczaj kod, który nale¿y wykonaæ raz, na pocz¹tku programu************
+	glfwSetScrollCallback(window, scroll_callback); //Zarejestruj procedurê obs³ugi scrollowania myszy
+    glfwSetMouseButtonCallback(window, mouse_button_callback); //Zarejestruj procedurê obs³ugi przycisków myszy
+    glfwSetCursorPosCallback(window, cursor_callback); //Zarejestruj procedurê obs³ugi przycisków myszy(window, mouse_button_callback); //Zarejestruj procedurê obs³ugi przycisków myszy
+    glfwSetKeyCallback(window, key_callback); //zarejestruj procedurê obs³ugi klawiatury
 
-	glClearColor(0.5,0.5,0.5,1); //Ustaw kolor czyszczenia ekranu
-
+	glClearColor(0,0,0,1); //Ustaw kolor czyszczenia ekranu
+    gen(n, mySquareVertices, mySquareColors);
+    Sn = new Snake();
 }
 
 //*****************************Procedury rysowania modeli*******************************
 
-void drawBoard(GLFWwindow* window, int board_size, mat4 V) {
+void drawBoard(GLFWwindow* window, mat4 V) {
 
     int tile_number = 0;
+    glVertexPointer(3,GL_FLOAT,0,mySquareVertices); //Ustaw tablicê mySquareVertices jako tablicê wierzcho³ków
 
-    glVertexPointer(3,GL_FLOAT,0,mySquareVertices); //Ustaw tablicÄ™ mySquareVertices jako tablicÄ™ wierzchoÅ‚kÃ³w
+    glColorPointer(3,GL_FLOAT,0,mySquareColors);
 
-    //macierz modelu pÅ‚ytki
+    //macierz modelu p³ytki
 	mat4 tile_M=mat4(1.0f);
-	tile_M=translate(tile_M, vec3(-1.0f,-1.0f,0.0f));
+	//tile_M=rotate(tile_M,-80*PI/180, vec3(1.0f,0.0f,0.0f));
+	//tile_M=translate(tile_M, vec3(0, 0, 0));
     mat4 tile_M_to_translate = tile_M;
 
-    for (int i=(board_size/2); i>-(board_size/2-1); i--) {
-        for (int j=(board_size/2); j>-(board_size/2-1); j--) {
 
-            //TODO: poprawa wyboru koloru
-            //WybÃ³r i ustawienie tablicy mySquareColors jako tablicy kolorÃ³w,
-            /*if ((tile_number+i)%2==0){
-                glColorPointer(3,GL_FLOAT,0,mySquareDarkerColors);
-            } else {
-                glColorPointer(3,GL_FLOAT,0,mySquareLighterColors);
-            }*/
 
-            glColorPointer(3,GL_FLOAT,0,mySquareLighterColors);
-
-            //rysowanie kafelkÃ³w
-            tile_M_to_translate = translate(tile_M_to_translate,glm::vec3((float)i,(float)j,0.0f));
-            glLoadMatrixf(value_ptr(V*tile_M_to_translate));  // wyliczenie macierzy
+            //rysowanie kafelków
+            glLoadMatrixf(value_ptr(V*tile_M));  // wyliczenie macierzy
             glDrawArrays(GL_TRIANGLES,0,mySquareVertexCount); //rysowanie
-            tile_M_to_translate = tile_M;  //przywrÃ³cenie domyÅ›lnej macierzy modelu
+            tile_M_to_translate = tile_M;  //przywrócenie domyœlnej macierzy modelu
 
             tile_number++;
-        }
-    }
+
+
 
 }
 
-//Procedura rysujÄ…ca zawartoÅ›Ä‡ sceny
+void drawSnake(GLFWwindow* window, int ang, mat4 mov, mat4 V, int n){
+    model* toDraw;
+    toDraw = Sn->Gethead();
+    float* Ver =toDraw->getVertices();
+    float* Col =toDraw->getColors();
+    int nofver = toDraw->getNumOfVer();
+    mat4 seg_mov =mat4 (1.0f);
+    seg_mov = rotate(seg_mov,-ang*PI/180,vec3(0,1,0));
+    int sciana=n/3;
+    int wierzcholek = n%3;
+    //rotate(mov,ang*PI/180,vec3(0,1,0));
+    glVertexPointer(3,GL_FLOAT,0 , Ver);
+    glColorPointer(3,GL_FLOAT,0,Col);
+    glLoadMatrixf(value_ptr(V*seg_mov));
+    glDrawArrays(GL_TRIANGLES,0,nofver);
+    /*int numer_of_segments= Sn->GetLength();
+    int rotation;
+    seg_mov = rotate(seg_mov,PI,vec3(0,1,0));
+    for (int i =0;i<numer_of_segments;i++){
+        toDraw = Sn->GetModel(i,&rotation);
+        float* Ver =toDraw->getVertices();
+        float* Col =toDraw->getColors();
+        int nofver = toDraw->getNumOfVer();
+        switch(rotation){
+            case 0:
+                glVertexPointer(3,GL_FLOAT,0 , Ver);
+                glColorPointer(3,GL_FLOAT,0,Col);
+                glLoadMatrixf(value_ptr(V*seg_mov));
+                glDrawArrays(GL_TRIANGLES,0,nofver);
+                seg_mov = translate(seg_mov,vec3(0,0,-0.1));
+            case 1:
+                seg_mov = translate(seg_mov, vec3(0,0,-PI/40+0.1));
+                seg_mov = rotate(seg_mov,9*PI/180, vec3(0,1,0));
+                glVertexPointer(3,GL_FLOAT,0 , Ver);
+                glColorPointer(3,GL_FLOAT,0,Col);
+                glLoadMatrixf(value_ptr(V*seg_mov));
+                glDrawArrays(GL_TRIANGLES,0,nofver);
+                seg_mov = translate(seg_mov,vec3(0,0,-0.1));
+            case 2:
+                seg_mov = translate(seg_mov, vec3(0,0,-PI/40+0.1));
+                seg_mov = rotate(seg_mov,-9*PI/180, vec3(0,1,0));
+                glVertexPointer(3,GL_FLOAT,0 , Ver);
+                glColorPointer(3,GL_FLOAT,0,Col);
+                glLoadMatrixf(value_ptr(V*seg_mov));
+                glDrawArrays(GL_TRIANGLES,0,nofver);
+                seg_mov = translate(seg_mov,vec3(0,0,-0.1));
+
+        }
+
+    }*/
+
+
+}
+
+//Procedura rysuj¹ca zawartoœæ sceny
 void drawScene(GLFWwindow* window) {
-	//************Tutaj umieszczaj kod rysujÄ…cy obraz******************
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT); //WyczyÅ›Ä‡ bufor kolorÃ³w (czyli przygotuj "pÅ‚Ã³tno" do rysowania)
+	//************Tutaj umieszczaj kod rysuj¹cy obraz******************
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT); //Wyczyœæ bufor kolorów (czyli przygotuj "p³ótno" do rysowania)
 
 	//***Przygotowanie do rysowania****
     mat4 P=perspective(50.0f*PI/180.0f,1.0f,1.0f,50.0f); //Wylicz macierz rzutowania P
-
     mat4 V=lookAt( //Wylicz macierz widoku
-                  vec3(position_x,position_y,user_distance),
+                  vec3(position_x,3.0f,user_distance),
                   vec3(0.0f,0.0f,0.0f),
                   vec3(0.0f,1.0f,0.0f));
+    if (rigth_turn && moves_counter%10 == 0){
+        move_angle+=90;
+        turn_counter = 10;
+        add_cam_angle = 9;
+        rigth_turn = false;
+    }
+    if (left_turn && moves_counter%10 == 0){
+        move_angle-=90;
+        turn_counter = 10;
+        add_cam_angle = -9;
+        left_turn = false;
+        printf("l");
+    }
+    if (turn_counter){
+        cam_angle += add_cam_angle;
+        cam_angle = cam_angle%360;
+        turn_counter -=1;
+    }
 
-    glMatrixMode(GL_PROJECTION); //WÅ‚Ä…cz tryb modyfikacji macierzy rzutowania
-    glLoadMatrixf(value_ptr(P)); //ZaÅ‚aduj macierz rzutowania
-    glMatrixMode(GL_MODELVIEW);  //WÅ‚Ä…cz tryb modyfikacji macierzy model-widok
+    direction = vec3(sin(move_angle*PI/180)*speed,0,-cos(move_angle*PI/180)*speed);
+    move = translate(move, direction);
+    moves_counter +=1;
+    V=rotate(V,(cam_angle)*PI/180,vec3(0,1,0));
 
-    glEnableClientState(GL_VERTEX_ARRAY); //Podczas rysowania uÅ¼ywaj tablicy wierzchoÅ‚kÃ³w
-    glEnableClientState(GL_COLOR_ARRAY); //Podczas rysowania uÅ¼ywaj tablicy kolorÃ³w
+    glMatrixMode(GL_PROJECTION); //W³¹cz tryb modyfikacji macierzy rzutowania
+    glLoadMatrixf(value_ptr(P)); //Za³aduj macierz rzutowania
+    glMatrixMode(GL_MODELVIEW);  //W³¹cz tryb modyfikacji macierzy model-widok
 
-    drawBoard(window, 4, V);
+    glEnableClientState(GL_VERTEX_ARRAY); //Podczas rysowania u¿ywaj tablicy wierzcho³ków
+    glEnableClientState(GL_COLOR_ARRAY); //Podczas rysowania u¿ywaj tablicy kolorów
 
-    //PosprzÄ…taj po sobie
+
+    drawBoard(window, V*move);
+    drawSnake(window,cam_angle, move, V, moves_counter);
+    if (cam_angle==move_angle){
+        Sn->move(10);
+    }
+    if(cam_angle > move_angle){
+        Sn->move(22);
+    }
+    if(cam_angle<move_angle){
+        Sn->move(21);
+    }
+
+
+    //Posprz¹taj po sobie
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
 
 
-    glfwSwapBuffers(window); //PrzerzuÄ‡ tylny bufor na przedni
+    glfwSwapBuffers(window); //Przerzuæ tylny bufor na przedni
 }
 
 int main(void)
 {
-	GLFWwindow* window; //WskaÅºnik na obiekt reprezentujÄ…cy okno
+	GLFWwindow* window; //WskaŸnik na obiekt reprezentuj¹cy okno
 
-	glfwSetErrorCallback(error_callback);//Zarejestruj procedurÄ™ obsÅ‚ugi bÅ‚Ä™dÃ³w
+	glfwSetErrorCallback(error_callback);//Zarejestruj procedurê obs³ugi b³êdów
 
-	if (!glfwInit()) { //Zainicjuj bibliotekÄ™ GLFW
-		fprintf(stderr, "Nie moÅ¼na zainicjowaÄ‡ GLFW.\n");
+	if (!glfwInit()) { //Zainicjuj bibliotekê GLFW
+		fprintf(stderr, "Nie mo¿na zainicjowaæ GLFW.\n");
 		exit(EXIT_FAILURE);
 	}
 
-	window = glfwCreateWindow(500, 500, "Snake 3D", NULL, NULL);  //UtwÃ³rz okno 500x500 o tytule "OpenGL" i kontekst OpenGL.
+	window = glfwCreateWindow(500, 500, "Snake 3D", NULL, NULL);  //Utwórz okno 500x500 o tytule "OpenGL" i kontekst OpenGL.
 
-	if (!window) //JeÅ¼eli okna nie udaÅ‚o siÄ™ utworzyÄ‡, to zamknij program
+	if (!window) //Je¿eli okna nie uda³o siê utworzyæ, to zamknij program
 	{
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
 
-	glfwMakeContextCurrent(window); //Od tego momentu kontekst okna staje siÄ™ aktywny i polecenia OpenGL bÄ™dÄ… dotyczyÄ‡ wÅ‚aÅ›nie jego.
-	glfwSwapInterval(1); //Czekaj na 1 powrÃ³t plamki przed pokazaniem ukrytego bufora
+	glfwMakeContextCurrent(window); //Od tego momentu kontekst okna staje siê aktywny i polecenia OpenGL bêd¹ dotyczyæ w³aœnie jego.
+	glfwSwapInterval(1); //Czekaj na 1 powrót plamki przed pokazaniem ukrytego bufora
 
 	GLenum err;
-	if ((err=glewInit()) != GLEW_OK) { //Zainicjuj bibliotekÄ™ GLEW
-		fprintf(stderr, "Nie moÅ¼na zainicjowaÄ‡ GLEW: %s\n", glewGetErrorString(err));
+	if ((err=glewInit()) != GLEW_OK) { //Zainicjuj bibliotekê GLEW
+		fprintf(stderr, "Nie mo¿na zainicjowaæ GLEW: %s\n", glewGetErrorString(err));
 		exit(EXIT_FAILURE);
 	}
 
-	initOpenGLProgram(window); //Operacje inicjujÄ…ce
+	initOpenGLProgram(window); //Operacje inicjuj¹ce
 
-	//GÅ‚Ã³wna pÄ™tla
-	while (!glfwWindowShouldClose(window)) //Tak dÅ‚ugo jak okno nie powinno zostaÄ‡ zamkniÄ™te
+	//G³ówna pêtla
+	while (!glfwWindowShouldClose(window)) //Tak d³ugo jak okno nie powinno zostaæ zamkniête
 	{
-		drawScene(window); //Wykonaj procedurÄ™ rysujÄ…cÄ…
-		glfwPollEvents(); //Wykonaj procedury callback w zaleznoÅ›ci od zdarzeÅ„ jakie zaszÅ‚y.
+		drawScene(window); //Wykonaj procedurê rysuj¹c¹
+		glfwPollEvents(); //Wykonaj procedury callback w zaleznoœci od zdarzeñ jakie zasz³y.
 	}
 
-	glfwDestroyWindow(window); //UsuÅ„ kontekst OpenGL i okno
-	glfwTerminate(); //Zwolnij zasoby zajÄ™te przez GLFW
+	glfwDestroyWindow(window); //Usuñ kontekst OpenGL i okno
+	glfwTerminate(); //Zwolnij zasoby zajête przez GLFW
 	exit(EXIT_SUCCESS);
 }
