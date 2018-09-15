@@ -267,13 +267,13 @@ void drawScene(GLFWwindow* window) {
     drawBoard(window, V*mov);
     drawSnake(window,cam_angle, mov, V, moves_counter);
     if (cam_angle==move_angle){
-        Sn->move(10);
+        Sn->mov(10);
     }
     if(cam_angle > move_angle){
-        Sn->move(22);
+        Sn->mov(22);
     }
     if(cam_angle<move_angle){
-        Sn->move(21);
+        Sn->mov(21);
     }
 
 

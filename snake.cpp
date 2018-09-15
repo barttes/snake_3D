@@ -40,7 +40,7 @@ model* Snake::GetModel(int n, int* r){
     }
 }
 
-void Snake::move(int n){
+void Snake::mov(int n){
     list_of_positions.push_front(n);
     list_of_positions.pop_back();
 }
