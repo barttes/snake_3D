@@ -6,12 +6,12 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-
 class model
 {
     public:
         /** Default constructor */
         model(int , float*, float* =NULL , float* =NULL, float* =NULL);
+        model(char* path, char* texPath);
         float* getVertices(){return vertices;}
         float* getNormals(){return vertices_normals;}
         float* getTexturs(){return vertices_textures;}
@@ -26,6 +26,7 @@ class model
         float* vertices_textures;
         float* vertices_colors;
         int NumOfVer;
+
 };
 
 #endif // MODEL_H

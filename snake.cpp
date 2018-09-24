@@ -1,12 +1,10 @@
 #include "snake.h"
 #include "simpleSnake.h"
-#include <vector>
-#include <stdlib.h>
-#include <stdio.h>
-//#include "functions\split.h"
+
+
 Snake::Snake()
 {
-    length = 20;
+    length = 10;
     head = new model(sizeof(simple_head)/sizeof(simple_head[0]), simple_head, NULL,NULL, simple_colors);
     tail = new model(12, simple_head, simple_head);
     str_segment = new model(sizeof(simple_straigth)/sizeof(simple_straigth[0]), simple_straigth,simple_straigth,NULL, simple_colors);
@@ -15,15 +13,17 @@ Snake::Snake()
     for(int i=0;i>10;i++) list_of_positions.push_front(1);
 }
 
-Snake::Snake(char* Fhead, char* Fsegment, char* Ftail)
+Snake::Snake(char* Fhead, char* Ftexhead, char* Fsegment, char* Ftexsegment, char* Ftail, char* Ftextail)
 {
-    FILE* ToRead = fopen(Fhead,Fhead);
-    char line[256];
-    char** Splited_line;
-    int* lengths;
-    int num_of_parts;
-    fgets(line, 255, ToRead);
-    //num_of_parts = split(line,Splited_line,' ', lengths);
+    length = 10;
+    head = new model(Fhead, Ftexhead);
+    tail = new model(Ftail, Ftextail);
+    str_segment = new model(Fsegment, Ftexsegment);
+    cur_segment = new model(Fsegment, Ftexsegment);
+    SegmentsPerUnit = 10;
+    for(int i=0;i>10;i++) list_of_positions.push_front(1);
+
+
 
 
 }
