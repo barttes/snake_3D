@@ -1,7 +1,7 @@
 #include "stage_gen.h"
 #include <stdio.h>
 
-void gen(int n, float* ver, float* color){
+int gen(int n, float* ver, float* color, float* nor){
 
    float square[] = {1, 0, 1,   0,0,0,   -1,0,1,
    -1,0,1,    0,0,0,   -1,0,-1,
@@ -17,10 +17,14 @@ void gen(int n, float* ver, float* color){
                 ver[k*36*n+i*36+j*3+1]=0;
                 ver[k*36*n+i*36+j*3+2]=square[j*3+2]+2*k-n;
                 color[k*36*n+i*36+j*3+0]=0.3*((i+k)%2)+0.1;
-                color[k*36*n+i*36+j*3+1]=0.3*((i+k)%2)+0.1;;
-                color[k*36*n+i*36+j*3+2]=0.3*((i+k)%2)+0.1;;
+                color[k*36*n+i*36+j*3+1]=0.3*((i+k)%2)+0.1;
+                color[k*36*n+i*36+j*3+2]=0.3*((i+k)%2)+0.1;
+                nor[k*36*n+i*36+j*3+0]=0;
+                nor[k*36*n+i*36+j*3+1]=1;
+                nor[k*36*n+i*36+j*3+2]=0;
             }
         }
    }
 
+   return n;
 }

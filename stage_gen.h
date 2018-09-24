@@ -2,6 +2,6 @@
 #define STAGE_GEN_H_INCLUDED
 
 
-void gen(int n, float* ver, float* color);
+int gen(int n, float* ver, float* color, float* nor);
 
 #endif // STAGE_GEN_H_INCLUDED

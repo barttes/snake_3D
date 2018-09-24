@@ -3,10 +3,10 @@
 #include <vector>
 #include <stdlib.h>
 #include <stdio.h>
-#include "functions\split.h"
+//#include "functions\split.h"
 Snake::Snake()
 {
-    length = 10;
+    length = 20;
     head = new model(sizeof(simple_head)/sizeof(simple_head[0]), simple_head, NULL,NULL, simple_colors);
     tail = new model(12, simple_head, simple_head);
     str_segment = new model(sizeof(simple_straigth)/sizeof(simple_straigth[0]), simple_straigth,simple_straigth,NULL, simple_colors);

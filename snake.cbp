@@ -54,6 +54,8 @@
 		<Unit filename="main_file.cpp" />
 		<Unit filename="model.cpp" />
 		<Unit filename="model.h" />
+		<Unit filename="model2.cpp" />
+		<Unit filename="model2.h" />
 		<Unit filename="mySquare.h" />
 		<Unit filename="simpleSnake.h">
 			<Option target="Debug" />
@@ -62,6 +64,8 @@
 		<Unit filename="snake.h" />
 		<Unit filename="stage_gen.cpp" />
 		<Unit filename="stage_gen.h" />
+		<Unit filename="torus.cpp" />
+		<Unit filename="torus.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

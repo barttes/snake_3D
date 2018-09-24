@@ -17,9 +17,14 @@ jeśli nie - napisz do Free Software Foundation, Inc., 59 Temple
 Place, Fifth Floor, Boston, MA  02110 - 1301  USA
 */
 
-#ifndef ALL_MODELS_H
-#define ALL_MODELS_H
+#include "model2.h"
 
-#include "torus.h"
+namespace Models {
+	void Model2::drawWire() {
+		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 
-#endif
+		drawSolid();
+
+		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	}
+}

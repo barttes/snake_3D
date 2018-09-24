@@ -7,5 +7,7 @@ float* mySquareVertices= new float[36*n*n];
 
 float* mySquareColors=new float[36*n*n];
 
+float* mySquareNormals=new float[36*n*n];
+
 #endif
 

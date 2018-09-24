@@ -17,9 +17,28 @@ jeśli nie - napisz do Free Software Foundation, Inc., 59 Temple
 Place, Fifth Floor, Boston, MA  02110 - 1301  USA
 */
 
-#ifndef ALL_MODELS_H
-#define ALL_MODELS_H
+#ifndef MODEL2_H
+#define MODEL2_H
 
-#include "torus.h"
+#include <vector>
+#include <glm/glm.hpp>
+#include <GLFW/glfw3.h>
+#include "constants.h"
+
+namespace Models {
+
+	class Model2 {
+		public:
+			int vertexCount;
+			float *vertices;
+			float *normals;
+			float *vertexNormals;
+			float *texCoords;
+			float *colors;
+
+			virtual void drawSolid()=0;
+			virtual void drawWire();
+	};
+}
 
 #endif

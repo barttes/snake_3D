@@ -33,9 +33,34 @@ Place, Fifth Floor, Boston, MA  02110 - 1301  USA
 #include "snake.h"
 #include <iostream>
 #include <cmath>
+#include "allmodels.h"
+#include <ctime>
+#include <vector>
 
 using namespace glm;
 using namespace std;
+
+//œwiat³o
+vec4 lightPos = vec4(0, 25, 0, 1);
+vec4 lightDir = vec4(0, -1, 0, 0);
+
+//informacja nt. wielkoœci generowanej planszy:
+int boardSize;
+int minAmountOfFood;
+int maxAmountOfFood;
+int actAmountOfFood;
+
+float foodAddingTime = 10.0f;
+
+int maxPossibleTranslation;
+
+struct foodTranslation {
+    int translationX;
+    int translationY;
+    int translationZ;
+};
+
+vector < foodTranslation > foodTranslationVec;
 
 //odleg³oœæ u¿ytkownika od œwiata
 float user_distance = -5.0f;
@@ -125,6 +150,68 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 }
 
+void initFirstFood(){
+    srand(time(NULL));
+
+    minAmountOfFood = 1;
+    maxAmountOfFood = boardSize - 5;
+    maxPossibleTranslation = boardSize - 1;
+    foodTranslation tempFoodTranslation;
+
+    actAmountOfFood = rand()%maxAmountOfFood + 1;
+
+    for (int i=0; i < actAmountOfFood; i++) {
+        tempFoodTranslation.translationX = (rand() % (maxPossibleTranslation*2)) - maxPossibleTranslation;
+        tempFoodTranslation.translationY = (rand() % (maxPossibleTranslation*2)) - maxPossibleTranslation;
+        tempFoodTranslation.translationZ = 0;
+
+        foodTranslationVec.push_back(tempFoodTranslation);
+    }
+
+
+    cout << "Min amount of food = " << minAmountOfFood << "\n";
+    cout << "Max amount of food = " << maxAmountOfFood << "\n";
+    cout << "Act amount of food = " << actAmountOfFood << "\n";
+    cout << "foodTranslationVec = " << foodTranslationVec.size() << "\n";
+    cout << "Max possible translation = " << maxPossibleTranslation << "\n";
+
+    for (int i=0; i < foodTranslationVec.size(); i++) {
+        cout << i << "X: " << foodTranslationVec[i].translationX << "\n";
+        cout << i << "Y: " << foodTranslationVec[i].translationY << "\n";
+        cout << i << "Z: " << foodTranslationVec[i].translationZ << "\n";
+        cout << "\n";
+        //foodTranslationVec.push_back(tempFoodTranslation);
+    }
+}
+
+void newFoodAdding(){
+    if (foodAddingTime < 0) {
+        cout << "Podmieniam jedzenie" << "\n";
+
+        srand(time(NULL));
+        foodTranslation tempFoodTranslation;
+        tempFoodTranslation.translationX = (rand() % (maxPossibleTranslation*2)) - maxPossibleTranslation;
+        tempFoodTranslation.translationY = (rand() % (maxPossibleTranslation*2)) - maxPossibleTranslation;
+        tempFoodTranslation.translationZ = 0;
+
+        if ( foodTranslationVec.size() == maxAmountOfFood) {
+            foodTranslationVec.erase(foodTranslationVec.begin());
+        }
+
+        foodTranslationVec.push_back(tempFoodTranslation);
+
+        for (int i=0; i < foodTranslationVec.size(); i++) {
+        cout << i << "X: " << foodTranslationVec[i].translationX << "\n";
+        cout << i << "Y: " << foodTranslationVec[i].translationY << "\n";
+        cout << i << "Z: " << foodTranslationVec[i].translationZ << "\n";
+        cout << "\n";
+        //foodTranslationVec.push_back(tempFoodTranslation);
+    }
+
+        foodAddingTime = 10.0f;
+    }
+
+}
 
 //Procedura inicjuj¹ca
 void initOpenGLProgram(GLFWwindow* window) {
@@ -135,7 +222,16 @@ void initOpenGLProgram(GLFWwindow* window) {
     glfwSetKeyCallback(window, key_callback); //zarejestruj procedurê obs³ugi klawiatury
 
 	glClearColor(0,0,0,1); //Ustaw kolor czyszczenia ekranu
-    gen(n, mySquareVertices, mySquareColors);
+
+	glEnable(GL_LIGHTING); //W³¹cz tryb cieniowania
+	glEnable(GL_LIGHT0); //W³¹cz zerowe Ÿród³o œwiat³a
+	glEnable(GL_DEPTH_TEST); //W³¹cz u¿ywanie bufora g³êbokoœci
+	glEnable(GL_COLOR_MATERIAL); //W³¹cz œledzenie kolorów przez materia³
+	glEnable(GL_NORMALIZE); // dodanie znormalizowanego wektora normalnego
+
+    boardSize = gen(n, mySquareVertices, mySquareColors, mySquareNormals);
+    initFirstFood();
+
     Sn = new Snake();
 }
 
@@ -145,25 +241,16 @@ void drawBoard(GLFWwindow* window, mat4 V) {
 
     int tile_number = 0;
     glVertexPointer(3,GL_FLOAT,0,mySquareVertices); //Ustaw tablicê mySquareVertices jako tablicê wierzcho³ków
-
+    glNormalPointer(GL_FLOAT,0,mySquareNormals);
     glColorPointer(3,GL_FLOAT,0,mySquareColors);
 
     //macierz modelu p³ytki
 	mat4 tile_M=mat4(1.0f);
-	//tile_M=rotate(tile_M,-80*PI/180, vec3(1.0f,0.0f,0.0f));
-	//tile_M=translate(tile_M, vec3(0, 0, 0));
-    mat4 tile_M_to_translate = tile_M;
 
+    //rysowanie kafelków
+    glLoadMatrixf(value_ptr(V*tile_M));  // wyliczenie macierzy
 
-
-            //rysowanie kafelków
-            glLoadMatrixf(value_ptr(V*tile_M));  // wyliczenie macierzy
-            glDrawArrays(GL_TRIANGLES,0,mySquareVertexCount); //rysowanie
-            tile_M_to_translate = tile_M;  //przywrócenie domyœlnej macierzy modelu
-
-            tile_number++;
-
-
+    glDrawArrays(GL_TRIANGLES,0,mySquareVertexCount); //rysowanie
 
 }
 
@@ -217,7 +304,33 @@ void drawSnake(GLFWwindow* window, int ang, mat4 mov, mat4 V, int n){
         }
 
     }*/
+}
 
+void drawTorus(GLFWwindow* window, mat4 V) {
+    float angle = 90*PI/180;
+    glColor3d(0.9f,0.8f,0.4f);
+    mat4 torusV = V;
+
+    for (int i = 0; i<foodTranslationVec.size(); i++) {
+        //macierz modelu torusa
+        mat4 torus_M=mat4(1.0f);
+        //obróæ torusa o 90 stopni - po³o¿enie w poziomie
+        torus_M = rotate(torus_M,angle,vec3(1.0f,0.0f,0.0f));
+
+        //dokonaj translacji torusa
+        torus_M = translate(torus_M, vec3(
+                                          foodTranslationVec[i].translationX,
+                                          foodTranslationVec[i].translationY,
+                                          foodTranslationVec[i].translationZ));
+
+        //zmniejsz torusa
+        torus_M = scale(torus_M, vec3(0.3f,0.3f,0.3f));
+
+        //rysowanie torusa
+        glLoadMatrixf(value_ptr(torusV*torus_M));  // wyliczenie macierzy
+        Models::torus.drawSolid();
+        torusV = V;
+    }
 
 }
 
@@ -229,7 +342,7 @@ void drawScene(GLFWwindow* window) {
 	//***Przygotowanie do rysowania****
     mat4 P=perspective(50.0f*PI/180.0f,1.0f,1.0f,50.0f); //Wylicz macierz rzutowania P
     mat4 V=lookAt( //Wylicz macierz widoku
-                  vec3(position_x,3.0f,user_distance),
+                  vec3(position_x,4.0f,user_distance),
                   vec3(0.0f,0.0f,0.0f),
                   vec3(0.0f,1.0f,0.0f));
     if (rigth_turn && moves_counter%10 == 0){
@@ -243,7 +356,6 @@ void drawScene(GLFWwindow* window) {
         turn_counter = 10;
         add_cam_angle = -9;
         left_turn = false;
-        printf("l");
     }
     if (turn_counter){
         cam_angle += add_cam_angle;
@@ -256,16 +368,38 @@ void drawScene(GLFWwindow* window) {
     moves_counter +=1;
     V=rotate(V,(cam_angle)*PI/180,vec3(0,1,0));
 
+    //*****************oœwietlenie*************************
+    float lightColor[]={10,10,10,1};
+
+    vec4 lightPosAct = V*mov*lightPos;
+    vec4 lightDirAct = V*mov*lightDir;
+    float lightPosTab[] = {lightPosAct.x, lightPosAct.y, lightPosAct.z, lightPosAct.w};
+    float lightDirTab[] = {lightDirAct.x, lightDirAct.y, lightDirAct.z, lightDirAct.w};
+
+    //float lightPos[]={0,10,0,1};
+    glLightfv(GL_LIGHT0,GL_DIFFUSE,lightColor);
+    glLightfv(GL_LIGHT0,GL_POSITION,lightPosTab);
+
+    float lightDir[]={0,-1,0,0};
+
+    glLightfv(GL_LIGHT0,GL_SPOT_DIRECTION,lightDirTab);
+    glLightf(GL_LIGHT0, GL_SPOT_CUTOFF,60);
+    glLightf(GL_LIGHT0,GL_SPOT_EXPONENT,20);
+
+    //***************************************************
+
     glMatrixMode(GL_PROJECTION); //W³¹cz tryb modyfikacji macierzy rzutowania
     glLoadMatrixf(value_ptr(P)); //Za³aduj macierz rzutowania
     glMatrixMode(GL_MODELVIEW);  //W³¹cz tryb modyfikacji macierzy model-widok
 
+    drawTorus(window, V*mov); //dodawanie torusów
+
     glEnableClientState(GL_VERTEX_ARRAY); //Podczas rysowania u¿ywaj tablicy wierzcho³ków
     glEnableClientState(GL_COLOR_ARRAY); //Podczas rysowania u¿ywaj tablicy kolorów
 
-
     drawBoard(window, V*mov);
     drawSnake(window,cam_angle, mov, V, moves_counter);
+
     if (cam_angle==move_angle){
         Sn->mov(10);
     }
@@ -275,7 +409,6 @@ void drawScene(GLFWwindow* window) {
     if(cam_angle<move_angle){
         Sn->mov(21);
     }
-
 
     //Posprz¹taj po sobie
     glDisableClientState(GL_VERTEX_ARRAY);
@@ -296,7 +429,7 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
-	window = glfwCreateWindow(500, 500, "Snake 3D", NULL, NULL);  //Utwórz okno 500x500 o tytule "OpenGL" i kontekst OpenGL.
+	window = glfwCreateWindow(500, 500, "Snake 3D", NULL, NULL);  //Utwórz okno 500x500 o tytule "Snake 3D" i kontekst OpenGL.
 
 	if (!window) //Je¿eli okna nie uda³o siê utworzyæ, to zamknij program
 	{
@@ -315,9 +448,13 @@ int main(void)
 
 	initOpenGLProgram(window); //Operacje inicjuj¹ce
 
+	glfwSetTime(0); //Wyzeruj licznik czasu
 	//G³ówna pêtla
 	while (!glfwWindowShouldClose(window)) //Tak d³ugo jak okno nie powinno zostaæ zamkniête
 	{
+	    foodAddingTime-=glfwGetTime(); //Pomniejsz czas na generowanie nowego jedzonka o czas który up³yn¹³ od wykonania poprzedniej klatki
+        newFoodAdding();
+	    glfwSetTime(0); //Wyzeruj licznik czasu
 		drawScene(window); //Wykonaj procedurê rysuj¹c¹
 		glfwPollEvents(); //Wykonaj procedury callback w zaleznoœci od zdarzeñ jakie zasz³y.
 	}
