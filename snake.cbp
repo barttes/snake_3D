@@ -46,26 +46,27 @@
 		<Unit filename="allmodels.h" />
 		<Unit filename="constants.h" />
 		<Unit filename="functions/split.cpp">
+			<Option compile="0" />
+			<Option link="0" />
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="functions/split.h">
+			<Option link="1" />
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
 		<Unit filename="main_file.cpp" />
 		<Unit filename="model.cpp" />
 		<Unit filename="model.h" />
-		<Unit filename="model2.cpp" />
-		<Unit filename="model2.h" />
 		<Unit filename="mySquare.h" />
 		<Unit filename="simpleSnake.h">
 			<Option target="Debug" />
 		</Unit>
 		<Unit filename="snake.cpp" />
 		<Unit filename="snake.h" />
+		<Unit filename="split.cpp" />
+		<Unit filename="split.h" />
 		<Unit filename="stage_gen.cpp" />
 		<Unit filename="stage_gen.h" />
-		<Unit filename="torus.cpp" />
-		<Unit filename="torus.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

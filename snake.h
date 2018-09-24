@@ -14,7 +14,7 @@ class Snake
         *\param Fsegment - path to file containing segment
         *\param Ftail - path to file containing tail
         */
-        Snake(char* Fhead, char* Fsegment, char* Ftail);
+        Snake(char* Fhead, char* Ftexhead, char* Fsegment, char* Ftexsegment, char* Ftail, char* Ftextail);
         /** Access length
          * \return The current value of length
          */
