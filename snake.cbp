@@ -45,6 +45,8 @@
 		</Linker>
 		<Unit filename="allmodels.h" />
 		<Unit filename="constants.h" />
+		<Unit filename="detailed_cube.cpp" />
+		<Unit filename="detailed_cube.h" />
 		<Unit filename="functions/split.cpp">
 			<Option compile="0" />
 			<Option link="0" />

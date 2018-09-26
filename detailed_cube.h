@@ -17,10 +17,29 @@ jeśli nie - napisz do Free Software Foundation, Inc., 59 Temple
 Place, Fifth Floor, Boston, MA  02110 - 1301  USA
 */
 
-#ifndef ALL_MODELS_H
-#define ALL_MODELS_H
+#ifndef DETAILED_CUBE_H
+#define DETAILED_CUBE_H
 
-#include "torus.h"
-#include "detailed_cube.h"
+
+#include "model2.h"
+
+namespace Models {
+	class DetailedCube:public Model2 {
+		public:
+			DetailedCube();
+			virtual ~DetailedCube();
+			virtual void drawSolid();
+		private:
+			void initCube();
+			void freeCube();
+			void wall();
+			void quad(int subdiv,int i1, int i2, float x, float y, float back, float nx, float ny, float s,float t,int pos);
+	};
+
+	extern DetailedCube detailedCube;
+}
+
+
+
 
 #endif

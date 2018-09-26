@@ -320,9 +320,9 @@ void drawTorus(GLFWwindow* window, mat4 V) {
 
         //dokonaj translacji torusa
         torus_M = translate(torus_M, vec3(
-                                          foodTranslationVec[i].translationX,
-                                          foodTranslationVec[i].translationY,
-                                          foodTranslationVec[i].translationZ));
+                                  foodTranslationVec[i].translationX,
+                                  foodTranslationVec[i].translationY,
+                                  foodTranslationVec[i].translationZ));
 
         //zmniejsz torusa
         torus_M = scale(torus_M, vec3(0.3f,0.3f,0.3f));
@@ -332,6 +332,44 @@ void drawTorus(GLFWwindow* window, mat4 V) {
         Models::torus.drawSolid();
         torusV = V;
     }
+
+}
+
+void drawWall(GLFWwindow* window, mat4 V) {
+    float translation = (float)boardSize;
+    glColor3d(0.5f,1.0f,0.0f);
+    mat4 cubeV = V;
+    //macierz modelu torusa
+    mat4 cubeM1, cubeM2, cubeM3, cubeM4 = mat4(1.0f);
+
+    //dokonaj translacji œciany #1
+    cubeM1 = translate(cubeM1, vec3(translation,0.0f,-1.0f));
+    cubeM1 = scale(cubeM1, vec3(1.0f,1.0f,translation));
+    //rysowanie torusa
+    glLoadMatrixf(value_ptr(cubeV*cubeM1));  // wyliczenie macierzy
+    Models::detailedCube.drawSolid();
+
+    //dokonaj translacji œciany #2
+    cubeM2 = translate(cubeM2, vec3(-translation-2,0.0f,-1.0f));
+    cubeM2 = scale(cubeM2, vec3(1.0f,1.0f,translation));
+    //rysowanie torusa
+    glLoadMatrixf(value_ptr(cubeV*cubeM2));  // wyliczenie macierzy
+    Models::detailedCube.drawSolid();
+
+    //dokonaj translacji œciany #3
+    cubeM3 = translate(cubeM3, vec3(-1.0f,0.0f,translation));
+    cubeM3 = scale(cubeM3, vec3(translation,1.0f,1.0f));
+    //rysowanie torusa
+    glLoadMatrixf(value_ptr(cubeV*cubeM3));  // wyliczenie macierzy
+    Models::detailedCube.drawSolid();
+
+    //dokonaj translacji œciany #4
+    cubeM4 = translate(cubeM4, vec3(-1.0f,0.0f,-translation-2));
+    cubeM4 = scale(cubeM4, vec3(translation,1.0f,1.0f));
+    //rysowanie torusa
+    glLoadMatrixf(value_ptr(cubeV*cubeM4));  // wyliczenie macierzy
+    Models::detailedCube.drawSolid();
+
 
 }
 
@@ -394,6 +432,7 @@ void drawScene(GLFWwindow* window) {
     glMatrixMode(GL_MODELVIEW);  //W³¹cz tryb modyfikacji macierzy model-widok
 
     drawTorus(window, V*mov); //dodawanie torusów
+    drawWall(window, V*mov); //dodawanie œciany
 
     glEnableClientState(GL_VERTEX_ARRAY); //Podczas rysowania u¿ywaj tablicy wierzcho³ków
     glEnableClientState(GL_COLOR_ARRAY); //Podczas rysowania u¿ywaj tablicy kolorów
