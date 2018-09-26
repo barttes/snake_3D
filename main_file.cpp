@@ -36,13 +36,18 @@ Place, Fifth Floor, Boston, MA  02110 - 1301  USA
 #include "allmodels.h"
 #include <ctime>
 #include <vector>
+#include "modelPaths.h"
 
 using namespace glm;
 using namespace std;
 
+// texture pointer
+GLuint tex;
+
 //œwiat³o
 vec4 lightPos = vec4(0, 25, 0, 1);
 vec4 lightDir = vec4(0, -1, 0, 0);
+mat4 lightMov = mat4(1.0f);
 
 //informacja nt. wielkoœci generowanej planszy:
 int boardSize;
@@ -229,28 +234,46 @@ void initOpenGLProgram(GLFWwindow* window) {
 	glEnable(GL_COLOR_MATERIAL); //W³¹cz œledzenie kolorów przez materia³
 	glEnable(GL_NORMALIZE); // dodanie znormalizowanego wektora normalnego
 
-    boardSize = gen(n, mySquareVertices, mySquareColors, mySquareNormals);
+    boardSize = gen(n, mySquareVertices, mySquareColors, mySquareNormals, mySquareTextures, mySquareTexImage, &mySquareTexWidth, &mySquareTexHight);
     initFirstFood();
 
-    Sn = new Snake();
+    Sn = new Snake(headPath,headTex,tailPath,tailTex,segmentPath,tailTex);
 }
 
 //*****************************Procedury rysowania modeli*******************************
 
 void drawBoard(GLFWwindow* window, mat4 V) {
 
-    int tile_number = 0;
-    glVertexPointer(3,GL_FLOAT,0,mySquareVertices); //Ustaw tablicê mySquareVertices jako tablicê wierzcho³ków
-    glNormalPointer(GL_FLOAT,0,mySquareNormals);
-    glColorPointer(3,GL_FLOAT,0,mySquareColors);
 
-    //macierz modelu p³ytki
-	mat4 tile_M=mat4(1.0f);
+    glGenTextures(1,&tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, mySquareTexWidth, mySquareTexHight, 0, GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char*) mySquareTexImage.data());
+
+
 
     //rysowanie kafelków
-    glLoadMatrixf(value_ptr(V*tile_M));  // wyliczenie macierzy
+    glLoadMatrixf(value_ptr(V));  // wyliczenie macierzy
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glEnableClientState(GL_COLOR_ARRAY);
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    glEnableClientState(GL_TEXTURE_2D);
+    glVertexPointer(3,GL_FLOAT,0,mySquareVertices);
+    glNormalPointer(GL_FLOAT,0,mySquareNormals);
+    glColorPointer(3,GL_FLOAT,0,mySquareColors);
+    glTexCoordPointer( 2, GL_FLOAT, 0, mySquareTextures);
 
     glDrawArrays(GL_TRIANGLES,0,mySquareVertexCount); //rysowanie
+
+    glDisableClientState( GL_VERTEX_ARRAY );
+    glDisableClientState( GL_NORMAL_ARRAY );
+    glDisableClientState(GL_COLOR_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    glDisableClientState(GL_TEXTURE_2D);
+
+    glDeleteTextures(1, &tex);
+
 
 }
 
@@ -259,16 +282,41 @@ void drawSnake(GLFWwindow* window, int ang, mat4 mov, mat4 V, int n){
     toDraw = Sn->Gethead();
     float* Ver =toDraw->getVertices();
     float* Col =toDraw->getColors();
+    float* Nor =toDraw->getNormals();
+    float* texture = toDraw->getTexturs();
     int nofver = toDraw->getNumOfVer();
     mat4 seg_mov =mat4 (1.0f);
     seg_mov = rotate(seg_mov,-ang*PI/180,vec3(0,1,0));
+    seg_mov = scale(seg_mov,vec3(3,3,3));
     int sciana=n/3;
     int wierzcholek = n%3;
     //rotate(mov,ang*PI/180,vec3(0,1,0));
+
+
+
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, toDraw->getTex_width(), toDraw->getTex_hight(), 0,GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char*) toDraw->getTex_image().data());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glEnableClientState( GL_VERTEX_ARRAY );
+    glEnableClientState( GL_TEXTURE_COORD_ARRAY );
+    glEnableClientState( GL_NORMAL_ARRAY );;
+    glEnable(GL_TEXTURE_2D);
+
+
     glVertexPointer(3,GL_FLOAT,0 , Ver);
     glColorPointer(3,GL_FLOAT,0,Col);
+    glNormalPointer(GL_FLOAT,0,Nor);
     glLoadMatrixf(value_ptr(V*seg_mov));
+    glTexCoordPointer( 2, GL_FLOAT, 0,texture );
     glDrawArrays(GL_TRIANGLES,0,nofver);
+    glDeleteTextures(1,&tex);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    glDisableClientState(GL_VERTEX_ARRAY);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_TEXTURE_2D);
+
     /*int numer_of_segments= Sn->GetLength();
     int rotation;
     seg_mov = rotate(seg_mov,PI,vec3(0,1,0));
@@ -365,14 +413,15 @@ void drawScene(GLFWwindow* window) {
 
     direction = vec3(sin(move_angle*PI/180)*speed,0,-cos(move_angle*PI/180)*speed);
     mov = translate(mov, direction);
+    lightMov = translate(lightMov,vec3((-1*direction.x)/2,0,(-1*direction.y)/2));
     moves_counter +=1;
     V=rotate(V,(cam_angle)*PI/180,vec3(0,1,0));
 
     //*****************oœwietlenie*************************
-    float lightColor[]={10,10,10,1};
+    float lightColor[]={3,3,3,1};
 
-    vec4 lightPosAct = V*mov*lightPos;
-    vec4 lightDirAct = V*mov*lightDir;
+    vec4 lightPosAct = V*lightMov*lightPos;
+    vec4 lightDirAct = V*lightMov*lightDir;
     float lightPosTab[] = {lightPosAct.x, lightPosAct.y, lightPosAct.z, lightPosAct.w};
     float lightDirTab[] = {lightDirAct.x, lightDirAct.y, lightDirAct.z, lightDirAct.w};
 
@@ -384,7 +433,7 @@ void drawScene(GLFWwindow* window) {
 
     glLightfv(GL_LIGHT0,GL_SPOT_DIRECTION,lightDirTab);
     glLightf(GL_LIGHT0, GL_SPOT_CUTOFF,60);
-    glLightf(GL_LIGHT0,GL_SPOT_EXPONENT,20);
+    glLightf(GL_LIGHT0,GL_SPOT_EXPONENT,10);
 
     //***************************************************
 
@@ -394,8 +443,6 @@ void drawScene(GLFWwindow* window) {
 
     drawTorus(window, V*mov); //dodawanie torusów
 
-    glEnableClientState(GL_VERTEX_ARRAY); //Podczas rysowania u¿ywaj tablicy wierzcho³ków
-    glEnableClientState(GL_COLOR_ARRAY); //Podczas rysowania u¿ywaj tablicy kolorów
 
     drawBoard(window, V*mov);
     drawSnake(window,cam_angle, mov, V, moves_counter);
