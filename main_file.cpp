@@ -20,6 +20,7 @@ Place, Fifth Floor, Boston, MA  02110 - 1301  USA
 
 #define GLM_FORCE_RADIANS
 
+#include "lodepng.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -38,12 +39,16 @@ Place, Fifth Floor, Boston, MA  02110 - 1301  USA
 #include <vector>
 #include "modelPaths.h"
 
+
 using namespace glm;
 using namespace std;
+
+GLuint tex; //Globalnie
 
 //œwiat³o
 vec4 lightPos = vec4(0, 25, 0, 1);
 vec4 lightDir = vec4(0, -1, 0, 0);
+mat4 lightMov = mat4(1.0f);
 
 //informacja nt. wielkoœci generowanej planszy:
 int boardSize;
@@ -87,7 +92,7 @@ int turn_counter = 0;
 bool rigth_turn=false;
 bool left_turn=false;
 
-//Procedura obs³ugi b³êdów
+//Procedura#include <lodepng.h> obs³ugi b³êdów
 void error_callback(int error, const char* description) {
 	fputs(description, stderr);
 }
@@ -230,6 +235,25 @@ void initOpenGLProgram(GLFWwindow* window) {
 	glEnable(GL_COLOR_MATERIAL); //W³¹cz œledzenie kolorów przez materia³
 	glEnable(GL_NORMALIZE); // dodanie znormalizowanego wektora normalnego
 
+	//Wczytanie do pamiêci komputera
+    std::vector<unsigned char> image;   //Alokuj wektor do wczytania obrazka
+    unsigned width, height;   //Zmienne do których wczytamy wymiary obrazka
+    //Wczytaj obrazek
+    unsigned error = lodepng::decode(image, width, height, "bricks.png");
+
+    //Import do pamiêci karty graficznej
+    glGenTextures(1,&tex); //Zainicjuj jeden uchwyt
+    glBindTexture(GL_TEXTURE_2D, tex); //Uaktywnij uchwyt
+    //Wczytaj obrazek do pamiêci KG skojarzonej z uchwytem
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, width, height, 0,
+     GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char*) image.data());
+
+     //wybór algorytmu teksturowania
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glEnable(GL_TEXTURE_2D);
+
     boardSize = gen(n, mySquareVertices, mySquareColors, mySquareNormals);
     initFirstFood();
 
@@ -337,7 +361,7 @@ void drawTorus(GLFWwindow* window, mat4 V) {
 
 void drawWall(GLFWwindow* window, mat4 V) {
     float translation = (float)boardSize;
-    glColor3d(0.5f,1.0f,0.0f);
+    glColor3d(1.0f,1.0f,1.0f);
     mat4 cubeV = V;
     //macierz modelu torusa
     mat4 cubeM1, cubeM2, cubeM3, cubeM4 = mat4(1.0f);
@@ -347,6 +371,7 @@ void drawWall(GLFWwindow* window, mat4 V) {
     cubeM1 = scale(cubeM1, vec3(1.0f,1.0f,translation));
     //rysowanie torusa
     glLoadMatrixf(value_ptr(cubeV*cubeM1));  // wyliczenie macierzy
+    glBindTexture(GL_TEXTURE_2D,tex);
     Models::detailedCube.drawSolid();
 
     //dokonaj translacji œciany #2
@@ -404,14 +429,15 @@ void drawScene(GLFWwindow* window) {
 
     direction = vec3(sin(move_angle*PI/180)*speed,0,-cos(move_angle*PI/180)*speed);
     mov = translate(mov, direction);
+    lightMov = translate(lightMov,vec3((-1*direction.x)/2,0,(-1*direction.y)/2));
     moves_counter +=1;
     V=rotate(V,(cam_angle)*PI/180,vec3(0,1,0));
 
     //*****************oœwietlenie*************************
-    float lightColor[]={10,10,10,1};
+    float lightColor[]={3,3,3,1};
 
-    vec4 lightPosAct = V*mov*lightPos;
-    vec4 lightDirAct = V*mov*lightDir;
+    vec4 lightPosAct = V*lightMov*lightPos;
+    vec4 lightDirAct = V*lightMov*lightDir;
     float lightPosTab[] = {lightPosAct.x, lightPosAct.y, lightPosAct.z, lightPosAct.w};
     float lightDirTab[] = {lightDirAct.x, lightDirAct.y, lightDirAct.z, lightDirAct.w};
 
@@ -423,7 +449,7 @@ void drawScene(GLFWwindow* window) {
 
     glLightfv(GL_LIGHT0,GL_SPOT_DIRECTION,lightDirTab);
     glLightf(GL_LIGHT0, GL_SPOT_CUTOFF,60);
-    glLightf(GL_LIGHT0,GL_SPOT_EXPONENT,20);
+    glLightf(GL_LIGHT0,GL_SPOT_EXPONENT,10);
 
     //***************************************************
 

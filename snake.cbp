@@ -56,6 +56,8 @@
 			<Option link="1" />
 			<Option target="&lt;{~None~}&gt;" />
 		</Unit>
+		<Unit filename="lodepng.cpp" />
+		<Unit filename="lodepng.h" />
 		<Unit filename="main_file.cpp" />
 		<Unit filename="model.cpp" />
 		<Unit filename="model.h" />
