@@ -43,10 +43,15 @@ Place, Fifth Floor, Boston, MA  02110 - 1301  USA
 using namespace glm;
 using namespace std;
 
+std::vector<unsigned char> imageW;   //Alokuj wektor do wczytania obrazka
+std::vector<unsigned char> imageB;   //Alokuj wektor do wczytania obrazka
+unsigned widthW, heightW;   //Zmienne do których wczytamy wymiary obrazka
+unsigned widthB, heightB;   //Zmienne do których wczytamy wymiary obrazka
+
 GLuint tex; //Globalnie
 
 //œwiat³o
-vec4 lightPos = vec4(0, 25, 0, 1);
+vec4 lightPos = vec4(0, 15, 0, 1);
 vec4 lightDir = vec4(0, -1, 0, 0);
 mat4 lightMov = mat4(1.0f);
 
@@ -236,25 +241,12 @@ void initOpenGLProgram(GLFWwindow* window) {
 	glEnable(GL_NORMALIZE); // dodanie znormalizowanego wektora normalnego
 
 	//Wczytanie do pamiêci komputera
-    std::vector<unsigned char> image;   //Alokuj wektor do wczytania obrazka
-    unsigned width, height;   //Zmienne do których wczytamy wymiary obrazka
     //Wczytaj obrazek
-    unsigned error = lodepng::decode(image, width, height, "bricks.png");
+    unsigned errorW = lodepng::decode(imageW, widthW, heightW, "bricks.png");
+    unsigned errorB = lodepng::decode(imageB, widthB, heightB, "trawa.png");
 
-    //Import do pamiêci karty graficznej
-    glGenTextures(1,&tex); //Zainicjuj jeden uchwyt
-    glBindTexture(GL_TEXTURE_2D, tex); //Uaktywnij uchwyt
-    //Wczytaj obrazek do pamiêci KG skojarzonej z uchwytem
-    glTexImage2D(GL_TEXTURE_2D, 0, 4, width, height, 0,
-     GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char*) image.data());
 
-     //wybór algorytmu teksturowania
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glEnable(GL_TEXTURE_2D);
-
-    boardSize = gen(n, mySquareVertices, mySquareColors, mySquareNormals);
+    boardSize = gen(n, mySquareVertices, mySquareColors, mySquareNormals, mySquareTextures);
     initFirstFood();
 
     Sn = new Snake(headPath,"",tailPath,"",segmentPath,"");
@@ -264,10 +256,27 @@ void initOpenGLProgram(GLFWwindow* window) {
 
 void drawBoard(GLFWwindow* window, mat4 V) {
 
+    //Import do pamiêci karty graficznej
+    glGenTextures(1,&tex); //Zainicjuj jeden uchwyt
+    glBindTexture(GL_TEXTURE_2D, tex); //Uaktywnij uchwyt
+    //Wczytaj obrazek do pamiêci KG skojarzonej z uchwytem
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, widthB, heightB, 0,
+     GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char*) imageB.data());
+
+     //wybór algorytmu teksturowania
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glEnable(GL_TEXTURE_2D);
+
     int tile_number = 0;
+    glEnableClientState(GL_NORMAL_ARRAY);
     glVertexPointer(3,GL_FLOAT,0,mySquareVertices); //Ustaw tablicê mySquareVertices jako tablicê wierzcho³ków
     glNormalPointer(GL_FLOAT,0,mySquareNormals);
-    glColorPointer(3,GL_FLOAT,0,mySquareColors);
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    glTexCoordPointer(2, GL_FLOAT, 0, mySquareTextures);
+    glDisableClientState(GL_COLOR_ARRAY);
+    //glColorPointer(3,GL_FLOAT,0,mySquareColors);
 
     //macierz modelu p³ytki
 	mat4 tile_M=mat4(1.0f);
@@ -276,6 +285,9 @@ void drawBoard(GLFWwindow* window, mat4 V) {
     glLoadMatrixf(value_ptr(V*tile_M));  // wyliczenie macierzy
 
     glDrawArrays(GL_TRIANGLES,0,mySquareVertexCount); //rysowanie
+    glDisableClientState(GL_NORMAL_ARRAY);
+
+    glDisable(GL_TEXTURE_2D);
 
 }
 
@@ -294,9 +306,9 @@ void drawSnake(GLFWwindow* window, int ang, mat4 mov, mat4 V, int n){
     glColorPointer(3,GL_FLOAT,0,Col);
     glLoadMatrixf(value_ptr(V*seg_mov));
     glDrawArrays(GL_TRIANGLES,0,nofver);
-    /*int numer_of_segments= Sn->GetLength();
+    int numer_of_segments= Sn->GetLength();
     int rotation;
-    seg_mov = rotate(seg_mov,PI,vec3(0,1,0));
+    /*seg_mov = rotate(seg_mov,PI,vec3(0,1,0));
     for (int i =0;i<numer_of_segments;i++){
         toDraw = Sn->GetModel(i,&rotation);
         float* Ver =toDraw->getVertices();
@@ -336,6 +348,8 @@ void drawTorus(GLFWwindow* window, mat4 V) {
     glColor3d(0.9f,0.8f,0.4f);
     mat4 torusV = V;
 
+
+
     for (int i = 0; i<foodTranslationVec.size(); i++) {
         //macierz modelu torusa
         mat4 torus_M=mat4(1.0f);
@@ -355,13 +369,42 @@ void drawTorus(GLFWwindow* window, mat4 V) {
         glLoadMatrixf(value_ptr(torusV*torus_M));  // wyliczenie macierzy
         Models::torus.drawSolid();
         torusV = V;
+        mat4 tempMatrix = torusV*torus_M;
+        mat4 tempIdentityMatrix = mat4(1.0f);
+        bool tempBool = true;
+        for (int i=0; i < 4; i++) {
+            for (int j=0; j < 4; j++) {
+
+                if (tempMatrix[i][j]!=tempIdentityMatrix[i][j]) {
+                    tempBool = false;
+                }
+
+            }
+        }
+        if (tempBool) {
+            cout << "JESTJESTEGHUSHQIJSIJSQIJSIQQS" << "\n";
+        }
     }
 
 }
 
 void drawWall(GLFWwindow* window, mat4 V) {
+
+    //Import do pamiêci karty graficznej
+    glGenTextures(1,&tex); //Zainicjuj jeden uchwyt
+    glBindTexture(GL_TEXTURE_2D, tex); //Uaktywnij uchwyt
+    //Wczytaj obrazek do pamiêci KG skojarzonej z uchwytem
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, widthW, heightW, 0,
+     GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char*) imageW.data());
+
+     //wybór algorytmu teksturowania
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glEnable(GL_TEXTURE_2D);
+
     float translation = (float)boardSize;
-    glColor3d(1.0f,1.0f,1.0f);
+    //glColor3d(1.0f,1.0f,1.0f);
     mat4 cubeV = V;
     //macierz modelu torusa
     mat4 cubeM1, cubeM2, cubeM3, cubeM4 = mat4(1.0f);
@@ -369,7 +412,16 @@ void drawWall(GLFWwindow* window, mat4 V) {
     //dokonaj translacji œciany #1
     cubeM1 = translate(cubeM1, vec3(translation,0.0f,-1.0f));
     cubeM1 = scale(cubeM1, vec3(1.0f,1.0f,translation));
-    //rysowanie torusa
+
+    //rysowanie œcian
+    float amb[]={0,0,0,1};
+    float dif[]={0.1,0.1,0.1,1};
+    float spec[]={0.1,0.1,0.1,1};
+
+    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, amb);
+    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, dif) ;
+    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR , spec);
+    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 10);
     glLoadMatrixf(value_ptr(cubeV*cubeM1));  // wyliczenie macierzy
     glBindTexture(GL_TEXTURE_2D,tex);
     Models::detailedCube.drawSolid();
@@ -395,6 +447,7 @@ void drawWall(GLFWwindow* window, mat4 V) {
     glLoadMatrixf(value_ptr(cubeV*cubeM4));  // wyliczenie macierzy
     Models::detailedCube.drawSolid();
 
+    glDisable(GL_TEXTURE_2D);
 
 }
 
@@ -434,21 +487,21 @@ void drawScene(GLFWwindow* window) {
     V=rotate(V,(cam_angle)*PI/180,vec3(0,1,0));
 
     //*****************oœwietlenie*************************
-    float lightColor[]={3,3,3,1};
+    float lightColor[]={1,1,1,1};
 
     vec4 lightPosAct = V*lightMov*lightPos;
     vec4 lightDirAct = V*lightMov*lightDir;
+    float lightPos[]={0,10,0,1};
+    float lightDir[]={0,-1,0,0};
     float lightPosTab[] = {lightPosAct.x, lightPosAct.y, lightPosAct.z, lightPosAct.w};
     float lightDirTab[] = {lightDirAct.x, lightDirAct.y, lightDirAct.z, lightDirAct.w};
 
-    //float lightPos[]={0,10,0,1};
     glLightfv(GL_LIGHT0,GL_DIFFUSE,lightColor);
     glLightfv(GL_LIGHT0,GL_POSITION,lightPosTab);
 
-    float lightDir[]={0,-1,0,0};
 
     glLightfv(GL_LIGHT0,GL_SPOT_DIRECTION,lightDirTab);
-    glLightf(GL_LIGHT0, GL_SPOT_CUTOFF,60);
+    glLightf(GL_LIGHT0, GL_SPOT_CUTOFF,50);
     glLightf(GL_LIGHT0,GL_SPOT_EXPONENT,10);
 
     //***************************************************
@@ -457,11 +510,14 @@ void drawScene(GLFWwindow* window) {
     glLoadMatrixf(value_ptr(P)); //Za³aduj macierz rzutowania
     glMatrixMode(GL_MODELVIEW);  //W³¹cz tryb modyfikacji macierzy model-widok
 
-    drawTorus(window, V*mov); //dodawanie torusów
+
     drawWall(window, V*mov); //dodawanie œciany
+
+    drawTorus(window, V*mov); //dodawanie torusów
 
     glEnableClientState(GL_VERTEX_ARRAY); //Podczas rysowania u¿ywaj tablicy wierzcho³ków
     glEnableClientState(GL_COLOR_ARRAY); //Podczas rysowania u¿ywaj tablicy kolorów
+
 
     drawBoard(window, V*mov);
     drawSnake(window,cam_angle, mov, V, moves_counter);

@@ -2189,11 +2189,12 @@
 
 1487675316 c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d_2\snake_3d\constants.h
 
-1537459995 source:c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d_2\snake_3d\stage_gen.cpp
+1538075096 source:c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d_2\snake_3d\stage_gen.cpp
 	"stage_gen.h"
 	<stdio.h>
+	<iostream>
 
-1537460008 c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d_2\snake_3d\stage_gen.h
+1538071554 c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d_2\snake_3d\stage_gen.h
 
 1487675316 source:c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d_2\snake_3d\torus.cpp
 	"torus.h"
@@ -2201,7 +2202,7 @@
 1537299960 c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d_2\snake_3d\torus.h
 	"model2.h"
 
-1537990246 source:c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d_2\snake_3d\main_file.cpp
+1538077350 source:c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d_2\snake_3d\main_file.cpp
 	"lodepng.h"
 	<GL/glew.h>
 	<GLFW/glfw3.h>
@@ -2287,7 +2288,7 @@
 	"../trigonometric.hpp"
 	"../matrix.hpp"
 
-1537987844 c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d_2\snake_3d\mysquare.h
+1538071572 c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d_2\snake_3d\mysquare.h
 
 1537808514 c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d_2\snake_3d\snake.h
 	"model.h"

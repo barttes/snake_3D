@@ -1,7 +1,10 @@
 #include "stage_gen.h"
 #include <stdio.h>
+#include<iostream>
 
-int gen(int n, float* ver, float* color, float* nor){
+using namespace std;
+
+int gen(int n, float* ver, float* color, float* nor, float* tex){
 
    float square[] = {1, 0, 1,   0,0,0,   -1,0,1,
    -1,0,1,    0,0,0,   -1,0,-1,
@@ -22,6 +25,10 @@ int gen(int n, float* ver, float* color, float* nor){
                 nor[k*36*n+i*36+j*3+0]=0;
                 nor[k*36*n+i*36+j*3+1]=1;
                 nor[k*36*n+i*36+j*3+2]=0;
+
+                tex[k*24*n+i*24+j*3+0]=((int)square[j*3+0]+1)*0.5;
+                tex[k*24*n+i*24+j*3+1]=((int)square[j*3+2]+1)*0.5;
+                cout << " " << tex[k*24*n+i*24+j*3+0] << " " << tex[k*24*n+i*24+j*3+1] << "\n";
             }
         }
    }
