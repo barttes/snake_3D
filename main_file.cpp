@@ -43,6 +43,8 @@ Place, Fifth Floor, Boston, MA  02110 - 1301  USA
 using namespace glm;
 using namespace std;
 
+bool gameOver = false;
+
 std::vector<unsigned char> imageW;   //Alokuj wektor do wczytania obrazka
 std::vector<unsigned char> imageB;   //Alokuj wektor do wczytania obrazka
 unsigned widthW, heightW;   //Zmienne do których wczytamy wymiary obrazka
@@ -242,7 +244,7 @@ void initOpenGLProgram(GLFWwindow* window) {
 
 	//Wczytanie do pamiêci komputera
     //Wczytaj obrazek
-    unsigned errorW = lodepng::decode(imageW, widthW, heightW, "bricks.png");
+    unsigned errorW = lodepng::decode(imageW, widthW, heightW, "dirt.png");
     unsigned errorB = lodepng::decode(imageB, widthB, heightB, "trawa.png");
 
 
@@ -350,6 +352,7 @@ void drawTorus(GLFWwindow* window, mat4 V) {
 
 
 
+
     for (int i = 0; i<foodTranslationVec.size(); i++) {
         //macierz modelu torusa
         mat4 torus_M=mat4(1.0f);
@@ -369,21 +372,22 @@ void drawTorus(GLFWwindow* window, mat4 V) {
         glLoadMatrixf(value_ptr(torusV*torus_M));  // wyliczenie macierzy
         Models::torus.drawSolid();
         torusV = V;
-        mat4 tempMatrix = torusV*torus_M;
-        mat4 tempIdentityMatrix = mat4(1.0f);
-        bool tempBool = true;
-        for (int i=0; i < 4; i++) {
-            for (int j=0; j < 4; j++) {
 
-                if (tempMatrix[i][j]!=tempIdentityMatrix[i][j]) {
-                    tempBool = false;
-                }
+        /*if (i==0) {
+            mat4 tempMatrix = tempMov*torus_M;
+            for (int j=0; j < 4; j++) {
+            for (int k=0; k < 4; k++) {
+
+                cout << tempMatrix[j][k] << " | ";
 
             }
+
+            cout << "\n";
         }
-        if (tempBool) {
-            cout << "JESTJESTEGHUSHQIJSIJSQIJSIQQS" << "\n";
-        }
+
+        cout << "\n\n\n";
+        }*/
+
     }
 
 }
@@ -451,6 +455,13 @@ void drawWall(GLFWwindow* window, mat4 V) {
 
 }
 
+void wallHit(mat4 tempMov){
+    if (tempMov[3][0] >= boardSize+1 ||
+        tempMov[3][0] <= -boardSize+1 ||
+        tempMov[3][2] >= boardSize+1 ||
+        tempMov[3][2] <= -boardSize+1) gameOver = true;
+}
+
 //Procedura rysuj¹ca zawartoœæ sceny
 void drawScene(GLFWwindow* window) {
 	//************Tutaj umieszczaj kod rysuj¹cy obraz******************
@@ -485,6 +496,18 @@ void drawScene(GLFWwindow* window) {
     lightMov = translate(lightMov,vec3((-1*direction.x)/2,0,(-1*direction.y)/2));
     moves_counter +=1;
     V=rotate(V,(cam_angle)*PI/180,vec3(0,1,0));
+
+    /*for (int i=0; i < 4; i++) {
+            for (int j=0; j < 4; j++) {
+
+                cout << mov[i][j] << " | ";
+
+            }
+
+            cout << "\n";
+        }
+
+        cout << "\n\n\n";*/
 
     //*****************oœwietlenie*************************
     float lightColor[]={1,1,1,1};
@@ -521,6 +544,7 @@ void drawScene(GLFWwindow* window) {
 
     drawBoard(window, V*mov);
     drawSnake(window,cam_angle, mov, V, moves_counter);
+    wallHit(mov);
 
     if (cam_angle==move_angle){
         Sn->mov(10);
@@ -572,7 +596,7 @@ int main(void)
 
 	glfwSetTime(0); //Wyzeruj licznik czasu
 	//G³ówna pêtla
-	while (!glfwWindowShouldClose(window)) //Tak d³ugo jak okno nie powinno zostaæ zamkniête
+	while (!glfwWindowShouldClose(window) && !gameOver) //Tak d³ugo jak okno nie powinno zostaæ zamkniête
 	{
 	    foodAddingTime-=glfwGetTime(); //Pomniejsz czas na generowanie nowego jedzonka o czas który up³yn¹³ od wykonania poprzedniej klatki
         newFoodAdding();

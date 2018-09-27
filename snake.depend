@@ -2202,7 +2202,7 @@
 1537299960 c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d_2\snake_3d\torus.h
 	"model2.h"
 
-1538077350 source:c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d_2\snake_3d\main_file.cpp
+1538082821 source:c:\users\dell\documents\studia\informatyka_4sem\grafika\snake_3d_2\snake_3d\main_file.cpp
 	"lodepng.h"
 	<GL/glew.h>
 	<GLFW/glfw3.h>
