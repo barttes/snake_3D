@@ -2,10 +2,9 @@
 #include <stdio.h>
 #include <fstream>
 #include "split.h"
+#include <vector>
 #include <stdlib.h>
 #include <stdio.h>
-#include "lodepng.h"
-
 
 model::model(int n,float* ver, float* norm, float* tex, float* color)
 /**constructor for models from source code
@@ -112,7 +111,6 @@ model::model(char* path, char* texPath){
     copy(Verout.begin(),Verout.end(),vertices);
     vertices_normals= new float[Verout.size()];
     copy(Verout.begin(),Verout.end(),vertices_normals);
-    for(int j = (Verout.size()-TexVerout.size());j=0;j--){TexVerout.push_back('0');}
     vertices_textures= new float[TexVerout.size()];
     copy(TexVerout.begin(),TexVerout.end(),vertices_textures);
     vertices_colors = new float[Verout.size()];
@@ -131,7 +129,6 @@ model::model(char* path, char* texPath){
     }
     NumOfVer = Verout.size()/3;
     fclose(ToRead);
-    unsigned int error = lodepng::decode(tex_image, tex_width, tex_hight, texPath);
 }
 
 /*model::model(char* file,float* ver, float* norm, float* tex, float* color)

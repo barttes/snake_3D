@@ -1,25 +1,26 @@
 /*
-Niniejszy program jest wolnym oprogramowaniem; mo¿esz go
-rozprowadzaæ dalej i / lub modyfikowaæ na warunkach Powszechnej
-Licencji Publicznej GNU, wydanej przez Fundacjê Wolnego
-Oprogramowania - wed³ug wersji 2 tej Licencji lub(wed³ug twojego
-wyboru) którejœ z póŸniejszych wersji.
+Niniejszy program jest wolnym oprogramowaniem; moÂ¿esz go
+rozprowadzaÃ¦ dalej i / lub modyfikowaÃ¦ na warunkach Powszechnej
+Licencji Publicznej GNU, wydanej przez FundacjÃª Wolnego
+Oprogramowania - wedÂ³ug wersji 2 tej Licencji lub(wedÂ³ug twojego
+wyboru) ktÃ³rejÅ“ z pÃ³Å¸niejszych wersji.
 
-Niniejszy program rozpowszechniany jest z nadziej¹, i¿ bêdzie on
-u¿yteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyœlnej
-gwarancji PRZYDATNOŒCI HANDLOWEJ albo PRZYDATNOŒCI DO OKREŒLONYCH
-ZASTOSOWAÑ.W celu uzyskania bli¿szych informacji siêgnij do
+Niniejszy program rozpowszechniany jest z nadziejÂ¹, iÂ¿ bÃªdzie on
+uÂ¿yteczny - jednak BEZ JAKIEJKOLWIEK GWARANCJI, nawet domyÅ“lnej
+gwarancji PRZYDATNOÅ’CI HANDLOWEJ albo PRZYDATNOÅ’CI DO OKREÅ’LONYCH
+ZASTOSOWAÃ‘.W celu uzyskania bliÂ¿szych informacji siÃªgnij do
 Powszechnej Licencji Publicznej GNU.
 
-Z pewnoœci¹ wraz z niniejszym programem otrzyma³eœ te¿ egzemplarz
+Z pewnoÅ“ciÂ¹ wraz z niniejszym programem otrzymaÂ³eÅ“ teÂ¿ egzemplarz
 Powszechnej Licencji Publicznej GNU(GNU General Public License);
-jeœli nie - napisz do Free Software Foundation, Inc., 59 Temple
+jeÅ“li nie - napisz do Free Software Foundation, Inc., 59 Temple
 Place, Fifth Floor, Boston, MA  02110 - 1301  USA
 */
 
 
 #define GLM_FORCE_RADIANS
 
+#include "lodepng.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -38,18 +39,18 @@ Place, Fifth Floor, Boston, MA  02110 - 1301  USA
 #include <vector>
 #include "modelPaths.h"
 
+
 using namespace glm;
 using namespace std;
 
-// texture pointer
-GLuint tex;
+GLuint tex; //Globalnie
 
-//œwiat³o
-vec4 lightPos = vec4(0, 25, 0, 1);
+//Å“wiatÂ³o
+vec4 lightPos = vec4(0, 20, 0, 1);
 vec4 lightDir = vec4(0, -1, 0, 0);
 mat4 lightMov = mat4(1.0f);
 
-//informacja nt. wielkoœci generowanej planszy:
+//informacja nt. wielkoÅ“ci generowanej planszy:
 int boardSize;
 int minAmountOfFood;
 int maxAmountOfFood;
@@ -67,43 +68,53 @@ struct foodTranslation {
 
 vector < foodTranslation > foodTranslationVec;
 
-//odleg³oœæ u¿ytkownika od œwiata
+//odlegÂ³oÅ“Ã¦ uÂ¿ytkownika od Å“wiata
 float user_distance = -5.0f;
 
-//po³o¿enie kamery
+//poÂ³oÂ¿enie kamery
 float position_x = 0.0f;
 float position_y = 0.0f;
 bool is_mouse_left_buton_pressed = false;
 float old_coordinate_x;
 float old_coordinate_y;
 
-//macierz postêpu
+//macierz postÃªpu
 Snake* Sn;
 mat4 mov= mat4(1.0f);
 int move_angle = 0;
-float speed= 0.1;
 bool keyPress = false;
-vec3 direction = vec3(sin(move_angle*PI/180)*speed,0,-cos(move_angle*PI/180)*speed);
+vec3 direction;
 int cam_angle = 0;
 int add_cam_angle= 0;
-int moves_counter = 0;
 int turn_counter = 0;
 bool rigth_turn=false;
 bool left_turn=false;
 
-//Procedura obs³ugi b³êdów
+
+// zwiÄ…zanie ruchu sneak'a z czasem
+const double mainTimePeriod = 2.0;
+short speed =20 ;
+double unitTimePeriod = mainTimePeriod/speed;
+//double toGoTimeperiod = unitTimePeriod;
+double leftFromUnit = 1;
+bool toLeft;
+double last_drawing;
+
+
+
+//Procedura#include <lodepng.h> obsÂ³ugi bÂ³ÃªdÃ³w
 void error_callback(int error, const char* description) {
 	fputs(description, stderr);
 }
 
-//*****************************Obs³uga eventów*******************************
+//*****************************ObsÂ³uga eventÃ³w*******************************
 
-//Procedura obs³ugi przycisku scrollowania myszy
+//Procedura obsÂ³ugi przycisku scrollowania myszy
 void scroll_callback(GLFWwindow* window, double x, double y){
     if ( user_distance+y > -40 && user_distance+y < -2) user_distance += y;
 }
 
-//Procedura obs³ugi przycisku  myszy
+//Procedura obsÂ³ugi przycisku  myszy
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods){
     if (action == GLFW_PRESS) {
         if (button == GLFW_MOUSE_BUTTON_1) {
@@ -117,7 +128,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     }
 }
 
-//Procedura obs³ugi przewijania obrazu za pomoc¹ kursora
+//Procedura obsÂ³ugi przewijania obrazu za pomocÂ¹ kursora
 void cursor_callback(GLFWwindow* window, double x, double y){
     if (is_mouse_left_buton_pressed == true) {
         if (x<old_coordinate_x) {
@@ -218,105 +229,85 @@ void newFoodAdding(){
 
 }
 
-//Procedura inicjuj¹ca
+//Procedura inicjujÂ¹ca
 void initOpenGLProgram(GLFWwindow* window) {
-	//************Tutaj umieszczaj kod, który nale¿y wykonaæ raz, na pocz¹tku programu************
-	glfwSetScrollCallback(window, scroll_callback); //Zarejestruj procedurê obs³ugi scrollowania myszy
-    glfwSetMouseButtonCallback(window, mouse_button_callback); //Zarejestruj procedurê obs³ugi przycisków myszy
-    glfwSetCursorPosCallback(window, cursor_callback); //Zarejestruj procedurê obs³ugi przycisków myszy(window, mouse_button_callback); //Zarejestruj procedurê obs³ugi przycisków myszy
-    glfwSetKeyCallback(window, key_callback); //zarejestruj procedurê obs³ugi klawiatury
+	//************Tutaj umieszczaj kod, ktÃ³ry naleÂ¿y wykonaÃ¦ raz, na poczÂ¹tku programu************
+	glfwSetScrollCallback(window, scroll_callback); //Zarejestruj procedurÃª obsÂ³ugi scrollowania myszy
+    glfwSetMouseButtonCallback(window, mouse_button_callback); //Zarejestruj procedurÃª obsÂ³ugi przyciskÃ³w myszy
+    glfwSetCursorPosCallback(window, cursor_callback); //Zarejestruj procedurÃª obsÂ³ugi przyciskÃ³w myszy(window, mouse_button_callback); //Zarejestruj procedurÃª obsÂ³ugi przyciskÃ³w myszy
+    glfwSetKeyCallback(window, key_callback); //zarejestruj procedurÃª obsÂ³ugi klawiatury
 
 	glClearColor(0,0,0,1); //Ustaw kolor czyszczenia ekranu
 
-	glEnable(GL_LIGHTING); //W³¹cz tryb cieniowania
-	glEnable(GL_LIGHT0); //W³¹cz zerowe Ÿród³o œwiat³a
-	glEnable(GL_DEPTH_TEST); //W³¹cz u¿ywanie bufora g³êbokoœci
-	glEnable(GL_COLOR_MATERIAL); //W³¹cz œledzenie kolorów przez materia³
+	glEnable(GL_LIGHTING); //WÂ³Â¹cz tryb cieniowania
+	glEnable(GL_LIGHT0); //WÂ³Â¹cz zerowe Å¸rÃ³dÂ³o Å“wiatÂ³a
+	glEnable(GL_DEPTH_TEST); //WÂ³Â¹cz uÂ¿ywanie bufora gÂ³ÃªbokoÅ“ci
+	glEnable(GL_COLOR_MATERIAL); //WÂ³Â¹cz Å“ledzenie kolorÃ³w przez materiaÂ³
 	glEnable(GL_NORMALIZE); // dodanie znormalizowanego wektora normalnego
 
-    boardSize = gen(n, mySquareVertices, mySquareColors, mySquareNormals, mySquareTextures, mySquareTexImage, &mySquareTexWidth, &mySquareTexHight);
+	//Wczytanie do pamiÃªci komputera
+    std::vector<unsigned char> image;   //Alokuj wektor do wczytania obrazka
+    unsigned width, height;   //Zmienne do ktÃ³rych wczytamy wymiary obrazka
+    //Wczytaj obrazek
+    unsigned error = lodepng::decode(image, width, height, "bricks.png");
+
+    //Import do pamiÃªci karty graficznej
+    glGenTextures(1,&tex); //Zainicjuj jeden uchwyt
+    glBindTexture(GL_TEXTURE_2D, tex); //Uaktywnij uchwyt
+    //Wczytaj obrazek do pamiÃªci KG skojarzonej z uchwytem
+    glTexImage2D(GL_TEXTURE_2D, 0, 4, width, height, 0,
+     GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char*) image.data());
+
+     //wybÃ³r algorytmu teksturowania
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glEnable(GL_TEXTURE_2D);
+
+    boardSize = gen(n, mySquareVertices, mySquareColors, mySquareNormals);
     initFirstFood();
 
-    Sn = new Snake(headPath,headTex,tailPath,tailTex,segmentPath,tailTex);
+    Sn = new Snake(headPath,"",tailPath,"",segmentPath,"");
 }
 
 //*****************************Procedury rysowania modeli*******************************
 
 void drawBoard(GLFWwindow* window, mat4 V) {
 
-
-    glGenTextures(1,&tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, 4, mySquareTexWidth, mySquareTexHight, 0, GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char*) mySquareTexImage.data());
-
-
-
-    //rysowanie kafelków
-    glLoadMatrixf(value_ptr(V));  // wyliczenie macierzy
-
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glEnableClientState(GL_COLOR_ARRAY);
+    int tile_number = 0;
     glEnableClientState(GL_NORMAL_ARRAY);
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glEnableClientState(GL_TEXTURE_2D);
-    glVertexPointer(3,GL_FLOAT,0,mySquareVertices);
+    glVertexPointer(3,GL_FLOAT,0,mySquareVertices); //Ustaw tablicÃª mySquareVertices jako tablicÃª wierzchoÂ³kÃ³w
     glNormalPointer(GL_FLOAT,0,mySquareNormals);
     glColorPointer(3,GL_FLOAT,0,mySquareColors);
-    glTexCoordPointer( 2, GL_FLOAT, 0, mySquareTextures);
+
+    //macierz modelu pÂ³ytki
+	mat4 tile_M=mat4(1.0f);
+
+    //rysowanie kafelkÃ³w
+    glLoadMatrixf(value_ptr(V*tile_M));  // wyliczenie macierzy
 
     glDrawArrays(GL_TRIANGLES,0,mySquareVertexCount); //rysowanie
 
-    glDisableClientState( GL_VERTEX_ARRAY );
-    glDisableClientState( GL_NORMAL_ARRAY );
-    glDisableClientState(GL_COLOR_ARRAY);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    glDisableClientState(GL_TEXTURE_2D);
 
-    glDeleteTextures(1, &tex);
-
+    glDisableClientState(GL_NORMAL_ARRAY);
 
 }
 
-void drawSnake(GLFWwindow* window, int ang, mat4 mov, mat4 V, int n){
+void drawSnake(GLFWwindow* window, int ang, mat4 mov, mat4 V){
     model* toDraw;
     toDraw = Sn->Gethead();
     float* Ver =toDraw->getVertices();
     float* Col =toDraw->getColors();
-    float* Nor =toDraw->getNormals();
-    float* texture = toDraw->getTexturs();
     int nofver = toDraw->getNumOfVer();
     mat4 seg_mov =mat4 (1.0f);
     seg_mov = rotate(seg_mov,-ang*PI/180,vec3(0,1,0));
-    seg_mov = scale(seg_mov,vec3(3,3,3));
     int sciana=n/3;
     int wierzcholek = n%3;
     //rotate(mov,ang*PI/180,vec3(0,1,0));
-
-
-
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_2D, tex);
-    glTexImage2D(GL_TEXTURE_2D, 0, 4, toDraw->getTex_width(), toDraw->getTex_hight(), 0,GL_RGBA, GL_UNSIGNED_BYTE, (unsigned char*) toDraw->getTex_image().data());
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glEnableClientState( GL_VERTEX_ARRAY );
-    glEnableClientState( GL_TEXTURE_COORD_ARRAY );
-    glEnableClientState( GL_NORMAL_ARRAY );;
-    glEnable(GL_TEXTURE_2D);
-
-
     glVertexPointer(3,GL_FLOAT,0 , Ver);
     glColorPointer(3,GL_FLOAT,0,Col);
-    glNormalPointer(GL_FLOAT,0,Nor);
     glLoadMatrixf(value_ptr(V*seg_mov));
-    glTexCoordPointer( 2, GL_FLOAT, 0,texture );
     glDrawArrays(GL_TRIANGLES,0,nofver);
-    glDeleteTextures(1,&tex);
-    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-    glDisableClientState(GL_VERTEX_ARRAY);
-    glDisableClientState(GL_NORMAL_ARRAY);
-    glDisableClientState(GL_TEXTURE_2D);
-
     /*int numer_of_segments= Sn->GetLength();
     int rotation;
     seg_mov = rotate(seg_mov,PI,vec3(0,1,0));
@@ -362,14 +353,14 @@ void drawTorus(GLFWwindow* window, mat4 V) {
     for (int i = 0; i<foodTranslationVec.size(); i++) {
         //macierz modelu torusa
         mat4 torus_M=mat4(1.0f);
-        //obróæ torusa o 90 stopni - po³o¿enie w poziomie
+        //obrÃ³Ã¦ torusa o 90 stopni - poÂ³oÂ¿enie w poziomie
         torus_M = rotate(torus_M,angle,vec3(1.0f,0.0f,0.0f));
 
         //dokonaj translacji torusa
         torus_M = translate(torus_M, vec3(
-                                          foodTranslationVec[i].translationX,
-                                          foodTranslationVec[i].translationY,
-                                          foodTranslationVec[i].translationZ));
+                                  foodTranslationVec[i].translationX,
+                                  foodTranslationVec[i].translationY,
+                                  foodTranslationVec[i].translationZ));
 
         //zmniejsz torusa
         torus_M = scale(torus_M, vec3(0.3f,0.3f,0.3f));
@@ -382,10 +373,49 @@ void drawTorus(GLFWwindow* window, mat4 V) {
 
 }
 
-//Procedura rysuj¹ca zawartoœæ sceny
-void drawScene(GLFWwindow* window) {
-	//************Tutaj umieszczaj kod rysuj¹cy obraz******************
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT); //Wyczyœæ bufor kolorów (czyli przygotuj "p³ótno" do rysowania)
+void drawWall(GLFWwindow* window, mat4 V) {
+    float translation = (float)boardSize;
+    glColor3d(1.0f,1.0f,1.0f);
+    mat4 cubeV = V;
+    //macierz modelu torusa
+    mat4 cubeM1, cubeM2, cubeM3, cubeM4 = mat4(1.0f);
+
+    //dokonaj translacji Å“ciany #1
+    cubeM1 = translate(cubeM1, vec3(translation,0.0f,-1.0f));
+    cubeM1 = scale(cubeM1, vec3(1.0f,1.0f,translation));
+    //rysowanie torusa
+    glLoadMatrixf(value_ptr(cubeV*cubeM1));  // wyliczenie macierzy
+    glBindTexture(GL_TEXTURE_2D,tex);
+    Models::detailedCube.drawSolid();
+
+    //dokonaj translacji Å“ciany #2
+    cubeM2 = translate(cubeM2, vec3(-translation-2,0.0f,-1.0f));
+    cubeM2 = scale(cubeM2, vec3(1.0f,1.0f,translation));
+    //rysowanie torusa
+    glLoadMatrixf(value_ptr(cubeV*cubeM2));  // wyliczenie macierzy
+    Models::detailedCube.drawSolid();
+
+    //dokonaj translacji Å“ciany #3
+    cubeM3 = translate(cubeM3, vec3(-1.0f,0.0f,translation));
+    cubeM3 = scale(cubeM3, vec3(translation,1.0f,1.0f));
+    //rysowanie torusa
+    glLoadMatrixf(value_ptr(cubeV*cubeM3));  // wyliczenie macierzy
+    Models::detailedCube.drawSolid();
+
+    //dokonaj translacji Å“ciany #4
+    cubeM4 = translate(cubeM4, vec3(-1.0f,0.0f,-translation-2));
+    cubeM4 = scale(cubeM4, vec3(translation,1.0f,1.0f));
+    //rysowanie torusa
+    glLoadMatrixf(value_ptr(cubeV*cubeM4));  // wyliczenie macierzy
+    Models::detailedCube.drawSolid();
+
+
+}
+
+//Procedura rysujÂ¹ca zawartoÅ“Ã¦ sceny
+void drawScene(GLFWwindow* window, double jump) {
+	//************Tutaj umieszczaj kod rysujÂ¹cy obraz******************
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT); //WyczyÅ“Ã¦ bufor kolorÃ³w (czyli przygotuj "pÂ³Ã³tno" do rysowania)
 
 	//***Przygotowanie do rysowania****
     mat4 P=perspective(50.0f*PI/180.0f,1.0f,1.0f,50.0f); //Wylicz macierz rzutowania P
@@ -393,31 +423,97 @@ void drawScene(GLFWwindow* window) {
                   vec3(position_x,4.0f,user_distance),
                   vec3(0.0f,0.0f,0.0f),
                   vec3(0.0f,1.0f,0.0f));
-    if (rigth_turn && moves_counter%10 == 0){
-        move_angle+=90;
-        turn_counter = 10;
-        add_cam_angle = 9;
+    if (rigth_turn && leftFromUnit==1.0){
         rigth_turn = false;
+        toLeft = false;
+        move_angle+=90;
+        turn_counter = 90;
+        if(unitTimePeriod<0.1){add_cam_angle=90;}
+        else{
+                if(unitTimePeriod<0.3){add_cam_angle=30;}
+                else{
+                        if(unitTimePeriod<0.8){add_cam_angle=9;}
+                        else{add_cam_angle=6;}
+                }
+        }
     }
-    if (left_turn && moves_counter%10 == 0){
-        move_angle-=90;
-        turn_counter = 10;
-        add_cam_angle = -9;
+    if (left_turn && leftFromUnit==1.0){
         left_turn = false;
+        toLeft = true;
+        move_angle-=90;
+        turn_counter = 90;
+        if(unitTimePeriod<0.1){add_cam_angle=-90;}
+        else{
+                if(unitTimePeriod<0.3){add_cam_angle=-45;}
+                else{
+                        if(unitTimePeriod<0.8){add_cam_angle=-10;}
+                        else{add_cam_angle=-9;}
+                }
+        }
+    }
+    double actJump;
+    if(jump>leftFromUnit){
+        actJump=leftFromUnit;
+        //toGoTimeperiod = unitTimePeriod;
+        leftFromUnit=1.0;
+    }
+    else{
+        actJump=jump;
+        leftFromUnit-=jump;
+        //toGoTimeperiod -= last_drawing;
     }
     if (turn_counter){
-        cam_angle += add_cam_angle;
+        turn_counter -=  abs(add_cam_angle);
+        /*if(add_cam_angle == 0){
+            add_cam_angle = 1;
+            turn_counter -= 1;
+        }*/
+        cam_angle +=  add_cam_angle;
         cam_angle = cam_angle%360;
-        turn_counter -=1;
     }
 
-    direction = vec3(sin(move_angle*PI/180)*speed,0,-cos(move_angle*PI/180)*speed);
+    /*if (turn_counter){
+        if(turn_counter> 90*jump){
+            add_cam_angle =  90*jump;
+            turn_counter -=  90*jump;
+            if(add_cam_angle == 0){
+                add_cam_angle = 1;
+                turn_counter -= 1;
+            }
+        }
+        else{
+            add_cam_angle = turn_counter;
+            turn_counter = 0;
+        }
+        if(toLeft){add_cam_angle = (-1)*add_cam_angle;}
+        cam_angle +=  add_cam_angle;
+        cam_angle = cam_angle%360;
+    }*/
+    direction = vec3(sin(move_angle*PI/180)*actJump,0,-cos(move_angle*PI/180)*actJump);
     mov = translate(mov, direction);
+    printf("x: %f\ty: %f\tz: %f\n",mov[3][0],mov[3][1],mov[3][2]);
     lightMov = translate(lightMov,vec3((-1*direction.x)/2,0,(-1*direction.y)/2));
-    moves_counter +=1;
     V=rotate(V,(cam_angle)*PI/180,vec3(0,1,0));
 
-    //*****************oœwietlenie*************************
+    /*if (leftFromUnit>jump){
+        direction = vec3(sin(move_angle*PI/180)*jump,0,-cos(move_angle*PI/180)*jump);
+        mov = translate(mov, direction);
+        lightMov = translate(lightMov,vec3((-1*direction.x)/2,0,(-1*direction.y)/2));
+        leftFromUnit -= jump;
+        toGoTimeperiod -= last_drawing;
+        V=rotate(V,(cam_angle)*PI/180,vec3(0,1,0));
+        printf("%d\n",cam_angle);
+    }
+    else{
+        direction = vec3(sin(move_angle*PI/180)*leftFromUnit,0,-cos(move_angle*PI/180)*leftFromUnit);
+        mov = translate(mov, direction);
+        lightMov = translate(lightMov,vec3((-1*direction.x)/2,0,(-1*direction.y)/2));
+        leftFromUnit = 1;
+        toGoTimeperiod = unitTimePeriod;
+        V=rotate(V,(cam_angle)*PI/180,vec3(0,1,0));
+    }*/
+
+    //*****************oÅ“wietlenie*************************
     float lightColor[]={3,3,3,1};
 
     vec4 lightPosAct = V*lightMov*lightPos;
@@ -437,15 +533,18 @@ void drawScene(GLFWwindow* window) {
 
     //***************************************************
 
-    glMatrixMode(GL_PROJECTION); //W³¹cz tryb modyfikacji macierzy rzutowania
-    glLoadMatrixf(value_ptr(P)); //Za³aduj macierz rzutowania
-    glMatrixMode(GL_MODELVIEW);  //W³¹cz tryb modyfikacji macierzy model-widok
+    glMatrixMode(GL_PROJECTION); //WÂ³Â¹cz tryb modyfikacji macierzy rzutowania
+    glLoadMatrixf(value_ptr(P)); //ZaÂ³aduj macierz rzutowania
+    glMatrixMode(GL_MODELVIEW);  //WÂ³Â¹cz tryb modyfikacji macierzy model-widok
 
-    drawTorus(window, V*mov); //dodawanie torusów
+    drawTorus(window, V*mov); //dodawanie torusÃ³w
+    drawWall(window, V*mov); //dodawanie Å“ciany
 
+    glEnableClientState(GL_VERTEX_ARRAY); //Podczas rysowania uÂ¿ywaj tablicy wierzchoÂ³kÃ³w
+    glEnableClientState(GL_COLOR_ARRAY); //Podczas rysowania uÂ¿ywaj tablicy kolorÃ³w
 
     drawBoard(window, V*mov);
-    drawSnake(window,cam_angle, mov, V, moves_counter);
+    drawSnake(window,cam_angle, mov, V);
 
     if (cam_angle==move_angle){
         Sn->mov(10);
@@ -457,56 +556,60 @@ void drawScene(GLFWwindow* window) {
         Sn->mov(21);
     }
 
-    //Posprz¹taj po sobie
+    //PosprzÂ¹taj po sobie
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
 
 
-    glfwSwapBuffers(window); //Przerzuæ tylny bufor na przedni
+    glfwSwapBuffers(window); //PrzerzuÃ¦ tylny bufor na przedni
 }
 
 int main(void)
 {
-	GLFWwindow* window; //WskaŸnik na obiekt reprezentuj¹cy okno
+	GLFWwindow* window; //WskaÅ¸nik na obiekt reprezentujÂ¹cy okno
 
-	glfwSetErrorCallback(error_callback);//Zarejestruj procedurê obs³ugi b³êdów
+	glfwSetErrorCallback(error_callback);//Zarejestruj procedurÃª obsÂ³ugi bÂ³ÃªdÃ³w
 
-	if (!glfwInit()) { //Zainicjuj bibliotekê GLFW
-		fprintf(stderr, "Nie mo¿na zainicjowaæ GLFW.\n");
+	if (!glfwInit()) { //Zainicjuj bibliotekÃª GLFW
+		fprintf(stderr, "Nie moÂ¿na zainicjowaÃ¦ GLFW.\n");
 		exit(EXIT_FAILURE);
 	}
 
-	window = glfwCreateWindow(500, 500, "Snake 3D", NULL, NULL);  //Utwórz okno 500x500 o tytule "Snake 3D" i kontekst OpenGL.
+	window = glfwCreateWindow(500, 500, "Snake 3D", NULL, NULL);  //UtwÃ³rz okno 500x500 o tytule "Snake 3D" i kontekst OpenGL.
 
-	if (!window) //Je¿eli okna nie uda³o siê utworzyæ, to zamknij program
+	if (!window) //JeÂ¿eli okna nie udaÂ³o siÃª utworzyÃ¦, to zamknij program
 	{
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
 
-	glfwMakeContextCurrent(window); //Od tego momentu kontekst okna staje siê aktywny i polecenia OpenGL bêd¹ dotyczyæ w³aœnie jego.
-	glfwSwapInterval(1); //Czekaj na 1 powrót plamki przed pokazaniem ukrytego bufora
+	glfwMakeContextCurrent(window); //Od tego momentu kontekst okna staje siÃª aktywny i polecenia OpenGL bÃªdÂ¹ dotyczyÃ¦ wÂ³aÅ“nie jego.
+	glfwSwapInterval(1); //Czekaj na 1 powrÃ³t plamki przed pokazaniem ukrytego bufora
 
 	GLenum err;
-	if ((err=glewInit()) != GLEW_OK) { //Zainicjuj bibliotekê GLEW
-		fprintf(stderr, "Nie mo¿na zainicjowaæ GLEW: %s\n", glewGetErrorString(err));
+	if ((err=glewInit()) != GLEW_OK) { //Zainicjuj bibliotekÃª GLEW
+		fprintf(stderr, "Nie moÂ¿na zainicjowaÃ¦ GLEW: %s\n", glewGetErrorString(err));
 		exit(EXIT_FAILURE);
 	}
 
-	initOpenGLProgram(window); //Operacje inicjuj¹ce
+	initOpenGLProgram(window); //Operacje inicjujÂ¹ce
 
 	glfwSetTime(0); //Wyzeruj licznik czasu
-	//G³ówna pêtla
-	while (!glfwWindowShouldClose(window)) //Tak d³ugo jak okno nie powinno zostaæ zamkniête
+	//GÂ³Ã³wna pÃªtla
+	while (!glfwWindowShouldClose(window)) //Tak dÂ³ugo jak okno nie powinno zostaÃ¦ zamkniÃªte
 	{
-	    foodAddingTime-=glfwGetTime(); //Pomniejsz czas na generowanie nowego jedzonka o czas który up³yn¹³ od wykonania poprzedniej klatki
+	    //dla procedury synchronizacji czasowej
+	    last_drawing = glfwGetTime();// zmienna przechowujÄ…ca na czas rysowania kolejnej klatki, dÅ‚ugoÅ›Ä‡ rysowania poprzedniej
+
+	    foodAddingTime-= last_drawing;//Pomniejsz czas na generowanie nowego jedzonka o czas ktÃ³ry upÂ³ynÂ¹Â³ od wykonania poprzedniej klatki
         newFoodAdding();
 	    glfwSetTime(0); //Wyzeruj licznik czasu
-		drawScene(window); //Wykonaj procedurê rysuj¹c¹
-		glfwPollEvents(); //Wykonaj procedury callback w zaleznoœci od zdarzeñ jakie zasz³y.
+		drawScene(window, last_drawing/unitTimePeriod); //Wykonaj procedurÃª rysujÂ¹cÂ¹
+		glfwPollEvents(); //Wykonaj procedury callback w zaleznoÅ“ci od zdarzeÃ± jakie zaszÂ³y.
+
 	}
 
-	glfwDestroyWindow(window); //Usuñ kontekst OpenGL i okno
-	glfwTerminate(); //Zwolnij zasoby zajête przez GLFW
+	glfwDestroyWindow(window); //UsuÃ± kontekst OpenGL i okno
+	glfwTerminate(); //Zwolnij zasoby zajÃªte przez GLFW
 	exit(EXIT_SUCCESS);
 }

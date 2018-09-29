@@ -1,8 +1,7 @@
 #include "stage_gen.h"
 #include <stdio.h>
-#include "lodepng.h"
 
-int gen(int n, float* ver, float* color, float* nor, float*texture,std::vector<unsigned char> TexImage, unsigned int* TexWidth,unsigned int* TexHight){
+int gen(int n, float* ver, float* color, float* nor){
 
    float square[] = {1, 0, 1,   0,0,0,   -1,0,1,
    -1,0,1,    0,0,0,   -1,0,-1,
@@ -23,12 +22,9 @@ int gen(int n, float* ver, float* color, float* nor, float*texture,std::vector<u
                 nor[k*36*n+i*36+j*3+0]=0;
                 nor[k*36*n+i*36+j*3+1]=1;
                 nor[k*36*n+i*36+j*3+2]=0;
-                texture[k*24*n+i*24+j*3+0]=(square[j*3+0]+1.0)/2.0;
-                texture[k*24*n+i*24+j*3+1]=(square[j*3+2]+1.0)/2.0;
-
             }
         }
-    }
-    unsigned int error = lodepng::decode(TexImage, *TexWidth, *TexHight, "textures/trawa.png");
-    return n;
+   }
+
+   return n;
 }
